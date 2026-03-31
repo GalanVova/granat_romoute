@@ -12,11 +12,17 @@ extension Color {
         default:
             (r, g, b) = (0, 0, 0)
         }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255
-        )
+        self.init(.sRGB, red: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255)
     }
+
+    // Design system
+    static let appBackground  = Color(hex: "0D0D0D")
+    static let cardBackground = Color(hex: "1C1C1C")
+    static let inputBackground = Color(hex: "1A1A1A")
+    static let inputBorder    = Color(hex: "333333")
+    static let primaryRed     = Color(hex: "CC0000")
+    static let buttonDark     = Color(hex: "2A2A2A")
+    static let textPrimary    = Color.white
+    static let textSecondary  = Color(hex: "888888")
+    static let selectedGreen  = Color(hex: "4CAF50")
 }

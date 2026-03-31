@@ -5,68 +5,90 @@ struct PCNSelectView: View {
     let country: Country
     @State private var query = ""
     @State private var selectedID: String?
+    @Environment(\.dismiss) var dismiss
 
     var filtered: [PCN] {
         let byCountry = demoPCNs.filter { $0.countryCode == country.code }
-        if query.trimmingCharacters(in: .whitespaces).isEmpty { return byCountry }
-        return byCountry.filter { $0.name.localizedCaseInsensitiveContains(query) }
+        let q = query.trimmingCharacters(in: .whitespaces)
+        return q.isEmpty ? byCountry : byCountry.filter { $0.name.localizedCaseInsensitiveContains(q) }
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Image(systemName: "magnifyingglass").foregroundColor(.secondary)
-                TextField("Search monitoring centers", text: $query)
-            }
-            .padding(10)
-            .background(Color(.systemGray6))
-            .cornerRadius(10)
-            .padding()
-
-            List(filtered) { pcn in
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            VStack(spacing: 0) {
+                // Nav bar
                 HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(pcn.name)
-                            .lineLimit(2)
-                            .font(.body)
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 18, weight: .medium))
+                            .foregroundColor(.textPrimary)
                     }
                     Spacer()
-                    if selectedID == pcn.id {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(Color(hex: "222222"))
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+
+                HStack {
+                    Text("Choosing a security system")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundColor(.textPrimary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 16)
+
+                DarkSearchField(text: $query, placeholder: "Search")
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 12)
+
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(filtered) { pcn in
+                            Button {
+                                selectedID = pcn.id
+                                appState.setPCN(pcn)
+                            } label: {
+                                HStack(spacing: 14) {
+                                    RadioDot(selected: selectedID == pcn.id)
+                                    Text(pcn.name)
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.textPrimary)
+                                        .multilineTextAlignment(.leading)
+                                        .lineLimit(2)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 14)
+                            }
+                            Divider().background(Color.inputBorder).padding(.leading, 20)
+                        }
                     }
                 }
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    selectedID = pcn.id
-                    appState.setPCN(pcn)
-                }
-            }
-            .listStyle(.plain)
 
-            Divider()
+                Spacer()
 
-            NavigationLink(destination: LoginView()) {
-                Text("Next")
-                    .font(.system(size: 16, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(Color(hex: "222222"))
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-            }
-            .simultaneousGesture(TapGesture().onEnded {
-                if appState.pcn == nil, let first = filtered.first {
-                    appState.setPCN(first)
+                NavigationLink(destination: LoginView()) {
+                    Text("Step two")
+                        .font(.system(size: 16, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                        .background(Color.buttonDark)
+                        .foregroundColor(.textPrimary)
+                        .cornerRadius(10)
                 }
-            })
-            .padding()
+                .simultaneousGesture(TapGesture().onEnded {
+                    if appState.pcn == nil, let first = filtered.first { appState.setPCN(first) }
+                })
+                .padding(16)
+            }
         }
-        .navigationTitle("Select monitoring center")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         .onAppear {
             appState.setCountry(country)
-            selectedID = appState.pcn?.id
+            selectedID = appState.pcn?.id ?? filtered.first?.id
+            if let first = filtered.first, appState.pcn == nil { appState.setPCN(first); selectedID = first.id }
         }
     }
 }

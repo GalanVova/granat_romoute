@@ -7,47 +7,31 @@ struct ShellView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             HomeView()
-                .tabItem {
-                    Label("Home", systemImage: "house")
-                }
+                .tabItem { Label("Home",    systemImage: "house.fill") }
                 .tag(0)
-
-            PlaceholderView(title: "Chat")
-                .tabItem {
-                    Label("Chat", systemImage: "bubble.left")
-                }
+            DarkPlaceholder(title: "Chat")
+                .tabItem { Label("Chat",    systemImage: "bubble.left.fill") }
                 .tag(1)
-
-            PlaceholderView(title: "Balance")
-                .tabItem {
-                    Label("Balance", systemImage: "creditcard")
-                }
+            DarkPlaceholder(title: "Balance")
+                .tabItem { Label("Balance", systemImage: "creditcard.fill") }
                 .tag(2)
-
-            PlaceholderView(title: "Call")
-                .tabItem {
-                    Label("Call", systemImage: "phone")
-                }
+            DarkPlaceholder(title: "Call")
+                .tabItem { Label("Call",    systemImage: "phone.fill") }
                 .tag(3)
         }
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Logout") {
-                    appState.logout()
-                }
-                .foregroundColor(Color(hex: "B5161B"))
-            }
-        }
+        .tint(Color.primaryRed)
+        .navigationBarHidden(true)
+        .preferredColorScheme(.dark)
     }
 }
 
-struct PlaceholderView: View {
+struct DarkPlaceholder: View {
     let title: String
-
     var body: some View {
-        Text("\(title) (coming soon)")
-            .font(.title3.weight(.semibold))
-            .foregroundColor(.secondary)
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            Text("\(title) — coming soon")
+                .foregroundColor(.textSecondary)
+        }
     }
 }

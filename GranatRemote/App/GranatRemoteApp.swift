@@ -8,6 +8,7 @@ struct GranatRemoteApp: App {
         WindowGroup {
             SplashView()
                 .environmentObject(appState)
+                .preferredColorScheme(.dark)
         }
     }
 }

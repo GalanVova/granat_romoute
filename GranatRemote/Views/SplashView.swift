@@ -8,15 +8,15 @@ struct SplashView: View {
             WelcomeView()
         } else {
             ZStack {
-                Color(hex: "1C1C1C").ignoresSafeArea()
-                VStack(spacing: 12) {
-                    Image(systemName: "shield.fill")
-                        .font(.system(size: 72))
-                        .foregroundColor(Color(hex: "B5161B"))
-                    Text("GRANAT")
-                        .font(.system(size: 32, weight: .heavy))
-                        .foregroundColor(.white)
-                        .kerning(2)
+                Color.appBackground.ignoresSafeArea()
+                VStack {
+                    HStack {
+                        GranatLogo()
+                            .padding(.leading, 20)
+                            .padding(.top, 16)
+                        Spacer()
+                    }
+                    Spacer()
                 }
             }
             .onAppear {
@@ -24,6 +24,21 @@ struct SplashView: View {
                     withAnimation { isActive = true }
                 }
             }
+        }
+    }
+}
+
+/// Custom GRANAT logo mark (red, top-left)
+struct GranatLogo: View {
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(Color.primaryRed, lineWidth: 3)
+                .frame(width: 36, height: 28)
+            RoundedRectangle(cornerRadius: 3)
+                .stroke(Color.primaryRed, lineWidth: 3)
+                .frame(width: 20, height: 14)
+                .offset(x: 6, y: 4)
         }
     }
 }

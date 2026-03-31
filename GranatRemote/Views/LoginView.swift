@@ -7,111 +7,123 @@ struct LoginView: View {
     @State private var showPassword = false
     @State private var error: String?
     @State private var navigateToShell = false
+    @Environment(\.dismiss) var dismiss
+
+    var canLogin: Bool { !login.trimmingCharacters(in: .whitespaces).isEmpty && !password.isEmpty }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Enter the username and password you received by SMS.")
-                .foregroundColor(Color(hex: "6B6B6B"))
-                .lineSpacing(5)
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            VStack(alignment: .leading, spacing: 0) {
+                // Back
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.textPrimary)
+                }
                 .padding(.top, 16)
 
-            // Login field
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Username").font(.caption).foregroundColor(.secondary)
-                TextField("Enter username", text: $login)
-                    .autocapitalization(.none)
-                    .disableAutocorrection(true)
-                    .padding(12)
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.systemGray4)))
-            }
-            .padding(.top, 16)
+                Text("Login")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundColor(.textPrimary)
+                    .padding(.top, 16)
 
-            // Password field
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Password").font(.caption).foregroundColor(.secondary)
-                HStack {
-                    if showPassword {
-                        TextField("Enter password", text: $password)
-                    } else {
-                        SecureField("Enter password", text: $password)
-                    }
-                    Button {
-                        showPassword.toggle()
-                    } label: {
-                        Image(systemName: showPassword ? "eye.slash" : "eye")
-                            .foregroundColor(.secondary)
-                    }
+                Text("Now you can enter the login and password received from the SMS.")
+                    .font(.system(size: 14))
+                    .foregroundColor(.textSecondary)
+                    .lineSpacing(4)
+                    .padding(.top, 10)
+
+                // Login field
+                DarkInputField(text: $login, placeholder: "Login", isSecure: false)
+                    .padding(.top, 20)
+
+                // Password field
+                DarkInputField(text: $password, placeholder: "Password", isSecure: !showPassword, trailingIcon: showPassword ? "eye.slash" : "eye") {
+                    showPassword.toggle()
                 }
-                .padding(12)
-                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.systemGray4)))
-            }
-            .padding(.top, 12)
+                .padding(.top, 12)
 
-            if let error {
-                Text(error)
-                    .foregroundColor(Color(hex: "B5161B"))
-                    .font(.caption)
-                    .padding(.top, 8)
-            }
+                if let error {
+                    Text(error)
+                        .font(.caption)
+                        .foregroundColor(.primaryRed)
+                        .padding(.top, 8)
+                }
 
-            Button {
-                handleSignIn()
-            } label: {
-                Text("Sign in")
-                    .font(.system(size: 16, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(Color(hex: "222222"))
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-            }
-            .padding(.top, 16)
-
-            HStack {
                 Spacer()
+
+                // Log In
+                Button { handleSignIn() } label: {
+                    Text("Log In")
+                        .font(.system(size: 16, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                        .background(canLogin ? Color.buttonDark : Color(hex: "222222"))
+                        .foregroundColor(canLogin ? .textPrimary : .textSecondary)
+                        .cornerRadius(10)
+                }
+                .padding(.bottom, 12)
+
+                // Forgot password
                 NavigationLink(destination: RecoverPasswordView()) {
                     Text("Forgot password?")
-                        .font(.subheadline)
-                        .foregroundColor(Color(hex: "222222"))
+                        .font(.system(size: 16, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                        .background(Color.clear)
+                        .foregroundColor(.textPrimary)
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.textPrimary, lineWidth: 1.5))
                 }
-                Spacer()
-            }
-            .padding(.top, 10)
+                .padding(.bottom, 32)
 
-            if let country = appState.country, let pcn = appState.pcn {
-                Text("Selected: \(country.name) → \(pcn.name)")
-                    .font(.caption)
-                    .foregroundColor(Color(hex: "6B6B6B"))
-                    .padding(.top, 10)
+                NavigationLink(destination: ShellView(), isActive: $navigateToShell) { EmptyView() }
             }
-
-            Spacer()
-
-            NavigationLink(destination: ShellView(), isActive: $navigateToShell) {
-                EmptyView()
-            }
+            .padding(.horizontal, 20)
         }
-        .padding(.horizontal, 16)
-        .navigationTitle("Sign in")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
     }
 
     private func handleSignIn() {
-        guard !login.trimmingCharacters(in: .whitespaces).isEmpty, !password.isEmpty else {
-            error = "Enter both username and password."
-            return
-        }
+        guard canLogin else { error = "Enter both username and password."; return }
         var pcn = appState.pcn
-        if pcn == nil {
-            pcn = demoPCNs.first
-            if let p = pcn { appState.setPCN(p) }
-        }
-        guard let pcn else {
-            error = "Monitoring center is not selected."
-            return
-        }
+        if pcn == nil { pcn = demoPCNs.first; if let p = pcn { appState.setPCN(p) } }
+        guard let pcn else { error = "Monitoring center is not selected."; return }
         error = nil
         appState.setSession(Session(host: pcn.host, port: pcn.port, login: login, password: password))
         navigateToShell = true
+    }
+}
+
+struct DarkInputField: View {
+    @Binding var text: String
+    let placeholder: String
+    let isSecure: Bool
+    var trailingIcon: String? = nil
+    var onTrailingTap: (() -> Void)? = nil
+
+    var body: some View {
+        HStack {
+            if isSecure {
+                SecureField("", text: $text)
+                    .placeholder(when: text.isEmpty) { Text(placeholder).foregroundColor(.textSecondary) }
+                    .foregroundColor(.textPrimary)
+            } else {
+                TextField("", text: $text)
+                    .placeholder(when: text.isEmpty) { Text(placeholder).foregroundColor(.textSecondary) }
+                    .foregroundColor(.textPrimary)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+            }
+            if let icon = trailingIcon {
+                Button { onTrailingTap?() } label: {
+                    Image(systemName: icon).foregroundColor(.textSecondary)
+                }
+            }
+        }
+        .padding(14)
+        .background(Color.inputBackground)
+        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.inputBorder, lineWidth: 1))
+        .cornerRadius(8)
     }
 }

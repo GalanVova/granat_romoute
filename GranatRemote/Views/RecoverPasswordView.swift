@@ -2,43 +2,50 @@ import SwiftUI
 
 struct RecoverPasswordView: View {
     @State private var phone = ""
+    @Environment(\.dismiss) var dismiss
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Enter the phone number linked to your account, and we will send you an SMS with a new password.")
-                .foregroundColor(Color(hex: "6B6B6B"))
-                .lineSpacing(5)
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            VStack(alignment: .leading, spacing: 0) {
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(.textPrimary)
+                }
                 .padding(.top, 16)
 
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Phone number").font(.caption).foregroundColor(.secondary)
-                TextField("+38 (0__) ___ __ __", text: $phone)
+                Text("Recover password")
+                    .font(.system(size: 28, weight: .semibold))
+                    .foregroundColor(.textPrimary)
+                    .padding(.top, 16)
+
+                Text("Enter the telephone number associated your account and we will send a SMS with new password.")
+                    .font(.system(size: 14))
+                    .foregroundColor(.textSecondary)
+                    .lineSpacing(4)
+                    .padding(.top, 10)
+
+                DarkInputField(text: $phone, placeholder: "+38 (068) 856 37 87", isSecure: false)
                     .keyboardType(.phonePad)
-                    .padding(12)
-                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color(.systemGray4)))
-            }
-            .padding(.top, 16)
+                    .padding(.top, 20)
 
-            Spacer()
+                Spacer()
 
-            Button {
-                // TODO: implement SMS reset
-            } label: {
-                Text("Send SMS")
-                    .font(.system(size: 16, weight: .semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(phone.trimmingCharacters(in: .whitespaces).isEmpty
-                                ? Color(hex: "BDBDBD")
-                                : Color(hex: "222222"))
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                Button {} label: {
+                    Text("Send")
+                        .font(.system(size: 16, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                        .background(phone.trimmingCharacters(in: .whitespaces).isEmpty ? Color(hex: "222222") : Color.buttonDark)
+                        .foregroundColor(phone.trimmingCharacters(in: .whitespaces).isEmpty ? .textSecondary : .textPrimary)
+                        .cornerRadius(10)
+                }
+                .disabled(phone.trimmingCharacters(in: .whitespaces).isEmpty)
+                .padding(.bottom, 32)
             }
-            .disabled(phone.trimmingCharacters(in: .whitespaces).isEmpty)
-            .padding(.bottom, 24)
+            .padding(.horizontal, 20)
         }
-        .padding(.horizontal, 16)
-        .navigationTitle("Recover password")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
     }
 }
