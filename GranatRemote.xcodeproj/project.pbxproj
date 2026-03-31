@@ -1,0 +1,411 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		2DBE9E72D12C02A5BB1547C8 /* GranatRemoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210F2F9F7D5E945ACDF72F61 /* GranatRemoteApp.swift */; };
+		2E0EE623119006CB610366F3 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884B538D6C0A25E53262E1C0 /* ColorExtension.swift */; };
+		4BDE07D8D371B7B606C760F6 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D55F25075832CD0F35F512C /* WelcomeView.swift */; };
+		4DE2440A6DBFD1BFC36E1CE2 /* CountrySelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7139C955826AC2B5F211189 /* CountrySelectView.swift */; };
+		52E57367F552662C025A38B1 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AB229FCC3EA91B742AB223 /* Session.swift */; };
+		68223F8288088A9205FC708A /* WampV1Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441E174F3CFCC5DFD01C2A1A /* WampV1Client.swift */; };
+		90E8EDA028945C284E2223F3 /* PCNSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8396FCEACEBDBDF13D298C70 /* PCNSelectView.swift */; };
+		97EC339BEBFA374C33E98FF0 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFDBA699A0207511F2EBC36 /* SplashView.swift */; };
+		98EA6735C3788944DB12890A /* LunAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347D75D8E98C5FBADFF0EC3F /* LunAPI.swift */; };
+		9A14F1D5D2B85B55D3EB421C /* ShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42BE897214133A80F593C3B3 /* ShellView.swift */; };
+		A038B02C6D4E9DEF054082CE /* RecoverPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFD7991FABF33CD3A04C9156 /* RecoverPasswordView.swift */; };
+		A52E56455FA955BE8863CE2D /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06335ADB53BBAAA5CEAE53C4 /* LoginView.swift */; };
+		AD31EB2E9BEFA2BDE35A3C18 /* Country.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D4C3625A3DF27DD095B10D2 /* Country.swift */; };
+		BDF0627054CDD5E6D16EBE9E /* DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C034663422093EF157EA209F /* DemoData.swift */; };
+		CAFF04B70761ED01005647DF /* PanelGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19725F02A2C416BE6B333E73 /* PanelGroup.swift */; };
+		D58BD95D75C24C1C5BB1E4CA /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B64527090E27144AEE5F6445 /* AppState.swift */; };
+		F11BDC1962F164BD9FE13976 /* PCN.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD05682B51A58344A853B0D1 /* PCN.swift */; };
+		FD55BC1EDD987533D828DC17 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BE165F3AC706D199F784A40 /* HomeView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		06335ADB53BBAAA5CEAE53C4 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		19725F02A2C416BE6B333E73 /* PanelGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelGroup.swift; sourceTree = "<group>"; };
+		210F2F9F7D5E945ACDF72F61 /* GranatRemoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GranatRemoteApp.swift; sourceTree = "<group>"; };
+		347D75D8E98C5FBADFF0EC3F /* LunAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LunAPI.swift; sourceTree = "<group>"; };
+		42BE897214133A80F593C3B3 /* ShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellView.swift; sourceTree = "<group>"; };
+		436C31422A1A765583BE21CF /* GranatRemote.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GranatRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		441E174F3CFCC5DFD01C2A1A /* WampV1Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WampV1Client.swift; sourceTree = "<group>"; };
+		6D4C3625A3DF27DD095B10D2 /* Country.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Country.swift; sourceTree = "<group>"; };
+		6D55F25075832CD0F35F512C /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		78AB229FCC3EA91B742AB223 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		8396FCEACEBDBDF13D298C70 /* PCNSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCNSelectView.swift; sourceTree = "<group>"; };
+		884B538D6C0A25E53262E1C0 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
+		9BE165F3AC706D199F784A40 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		AAFDBA699A0207511F2EBC36 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
+		B523E9CD5BCD58F0723D1801 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B64527090E27144AEE5F6445 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
+		C034663422093EF157EA209F /* DemoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoData.swift; sourceTree = "<group>"; };
+		D7139C955826AC2B5F211189 /* CountrySelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountrySelectView.swift; sourceTree = "<group>"; };
+		DFD7991FABF33CD3A04C9156 /* RecoverPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoverPasswordView.swift; sourceTree = "<group>"; };
+		FD05682B51A58344A853B0D1 /* PCN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCN.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		0A5312B0E18204D2918C2209 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				436C31422A1A765583BE21CF /* GranatRemote.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		3162871DF0C4D9868C921276 /* GranatRemote */ = {
+			isa = PBXGroup;
+			children = (
+				76F023A3F266D7A4EDE09802 /* App */,
+				50BFB7289057E03F789CA432 /* Data */,
+				F7D7C06DA66957F33333DDE7 /* Models */,
+				9EB09285E814F901339872E4 /* Resources */,
+				B52A74BF1A3D9B6B4F017165 /* Services */,
+				B56510D9D950ADC9BE39BADF /* Views */,
+			);
+			path = GranatRemote;
+			sourceTree = "<group>";
+		};
+		50BFB7289057E03F789CA432 /* Data */ = {
+			isa = PBXGroup;
+			children = (
+				C034663422093EF157EA209F /* DemoData.swift */,
+			);
+			path = Data;
+			sourceTree = "<group>";
+		};
+		76F023A3F266D7A4EDE09802 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				B64527090E27144AEE5F6445 /* AppState.swift */,
+				210F2F9F7D5E945ACDF72F61 /* GranatRemoteApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		9EB09285E814F901339872E4 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B523E9CD5BCD58F0723D1801 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		B52A74BF1A3D9B6B4F017165 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				347D75D8E98C5FBADFF0EC3F /* LunAPI.swift */,
+				441E174F3CFCC5DFD01C2A1A /* WampV1Client.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		B56510D9D950ADC9BE39BADF /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				884B538D6C0A25E53262E1C0 /* ColorExtension.swift */,
+				D7139C955826AC2B5F211189 /* CountrySelectView.swift */,
+				9BE165F3AC706D199F784A40 /* HomeView.swift */,
+				06335ADB53BBAAA5CEAE53C4 /* LoginView.swift */,
+				8396FCEACEBDBDF13D298C70 /* PCNSelectView.swift */,
+				DFD7991FABF33CD3A04C9156 /* RecoverPasswordView.swift */,
+				42BE897214133A80F593C3B3 /* ShellView.swift */,
+				AAFDBA699A0207511F2EBC36 /* SplashView.swift */,
+				6D55F25075832CD0F35F512C /* WelcomeView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		D814C3B909FBA37D9F402549 = {
+			isa = PBXGroup;
+			children = (
+				3162871DF0C4D9868C921276 /* GranatRemote */,
+				0A5312B0E18204D2918C2209 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F7D7C06DA66957F33333DDE7 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				6D4C3625A3DF27DD095B10D2 /* Country.swift */,
+				19725F02A2C416BE6B333E73 /* PanelGroup.swift */,
+				FD05682B51A58344A853B0D1 /* PCN.swift */,
+				78AB229FCC3EA91B742AB223 /* Session.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A4D3A6A052BFD3F08221E705 /* GranatRemote */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CD0894475988181C9883BBBF /* Build configuration list for PBXNativeTarget "GranatRemote" */;
+			buildPhases = (
+				95EA0791E4AC986418947FD1 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = GranatRemote;
+			packageProductDependencies = (
+			);
+			productName = GranatRemote;
+			productReference = 436C31422A1A765583BE21CF /* GranatRemote.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		528075CF4400E4726F4B83F6 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					A4D3A6A052BFD3F08221E705 = {
+						DevelopmentTeam = "";
+					};
+				};
+			};
+			buildConfigurationList = 78C656951D2CA52CB2232820 /* Build configuration list for PBXProject "GranatRemote" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = D814C3B909FBA37D9F402549;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 0A5312B0E18204D2918C2209 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A4D3A6A052BFD3F08221E705 /* GranatRemote */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		95EA0791E4AC986418947FD1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D58BD95D75C24C1C5BB1E4CA /* AppState.swift in Sources */,
+				2E0EE623119006CB610366F3 /* ColorExtension.swift in Sources */,
+				AD31EB2E9BEFA2BDE35A3C18 /* Country.swift in Sources */,
+				4DE2440A6DBFD1BFC36E1CE2 /* CountrySelectView.swift in Sources */,
+				BDF0627054CDD5E6D16EBE9E /* DemoData.swift in Sources */,
+				2DBE9E72D12C02A5BB1547C8 /* GranatRemoteApp.swift in Sources */,
+				FD55BC1EDD987533D828DC17 /* HomeView.swift in Sources */,
+				A52E56455FA955BE8863CE2D /* LoginView.swift in Sources */,
+				98EA6735C3788944DB12890A /* LunAPI.swift in Sources */,
+				F11BDC1962F164BD9FE13976 /* PCN.swift in Sources */,
+				90E8EDA028945C284E2223F3 /* PCNSelectView.swift in Sources */,
+				CAFF04B70761ED01005647DF /* PanelGroup.swift in Sources */,
+				A038B02C6D4E9DEF054082CE /* RecoverPasswordView.swift in Sources */,
+				52E57367F552662C025A38B1 /* Session.swift in Sources */,
+				9A14F1D5D2B85B55D3EB421C /* ShellView.swift in Sources */,
+				97EC339BEBFA374C33E98FF0 /* SplashView.swift in Sources */,
+				68223F8288088A9205FC708A /* WampV1Client.swift in Sources */,
+				4BDE07D8D371B7B606C760F6 /* WelcomeView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A2C0DD710CE8B9B8D06CD3D6 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.granat.remote;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		A3978BE444E9BD90D4409EAA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = GranatRemote/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.granat.remote;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		CCBEF48220F486D8F7A82206 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.granat.remote;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		F84DF62BBFF8F8D11E29DFB7 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = GranatRemote/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.granat.remote;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		78C656951D2CA52CB2232820 /* Build configuration list for PBXProject "GranatRemote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CCBEF48220F486D8F7A82206 /* Debug */,
+				A2C0DD710CE8B9B8D06CD3D6 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CD0894475988181C9883BBBF /* Build configuration list for PBXNativeTarget "GranatRemote" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F84DF62BBFF8F8D11E29DFB7 /* Debug */,
+				A3978BE444E9BD90D4409EAA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 528075CF4400E4726F4B83F6 /* Project object */;
+}
