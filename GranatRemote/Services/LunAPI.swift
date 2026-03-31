@@ -27,10 +27,7 @@ class LunAPI {
         let nonce = try await generateNonce(login: login)
         let p = Self.hmacSHA512Base64(password: password, nonce: nonce)
         let res = try await client.call("Signup", args: [login, p, "PhoenixMK", "", 1, "ru", "ios", "1.0"])
-        // Server may return error as CALLRESULT body — check and throw
-        if let m = try? parseDict(res), let err = m["error"] as? String, !err.isEmpty {
-            throw WampError.callError(err)
-        }
+        // Flutter ignores the Signup response body — we do the same
     }
 
     func getPanelGroups() async throws -> [PanelGroup] {
