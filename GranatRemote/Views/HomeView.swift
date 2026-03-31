@@ -17,8 +17,12 @@ class HomeViewModel: ObservableObject {
             let c = WampV1Client(uri: uri)
             try await c.connect()
             let a = LunAPI(client: c)
-            try await a.signup(login: session.login, password: session.password)
-            let g = try await a.getPanelGroups()
+            let signupRes = try await a.signupRaw(login: session.login, password: session.password)
+            // Server returns panels in Signup response — use them directly
+            var g = a.parsePanelsFromSignup(signupRes)
+            if g.isEmpty {
+                g = try await a.getPanelGroups()
+            }
             session.groups = g
             self.client = c
             self.api = a

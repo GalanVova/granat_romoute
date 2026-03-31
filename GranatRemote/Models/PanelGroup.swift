@@ -10,8 +10,9 @@ struct PanelGroup: Identifiable {
         guard let m = json as? [String: Any] else { return nil }
         let id = "\(m["id"] ?? "")"
         let gr = Int("\(m["gr"] ?? 0)") ?? 0
-        let name = "\(m["name"] ?? m["nm"] ?? "")"
-        let addr = m["addr"].map { "\($0)" }
-        return PanelGroup(id: id, group: gr, name: name, address: addr)
+        let name = (m["name"] as? String ?? m["nm"] as? String ?? "").trimmingCharacters(in: .whitespaces)
+        let addr = (m["adr"] as? String ?? m["addr"] as? String)?.trimmingCharacters(in: .whitespaces)
+        let addrFinal = addr?.isEmpty == false ? addr : nil
+        return PanelGroup(id: id, group: gr, name: name, address: addrFinal)
     }
 }

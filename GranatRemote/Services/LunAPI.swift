@@ -18,22 +18,35 @@ class LunAPI {
     }
 
     static func hmacSHA512Base64(password: String, nonce: String) -> String {
+        // msg = nonce + password  (matches the working Python/Windows desktop app)
         let key = SymmetricKey(data: Data(password.utf8))
-        let mac = HMAC<SHA512>.authenticationCode(for: Data(nonce.utf8), using: key)
+        let msg = Data((nonce + password).utf8)
+        let mac = HMAC<SHA512>.authenticationCode(for: msg, using: key)
         return Data(mac).base64EncodedString()
     }
 
     func signup(login: String, password: String) async throws {
+        _ = try await signupRaw(login: login, password: password)
+    }
+
+    func signupRaw(login: String, password: String) async throws -> Any? {
         let nonce = try await generateNonce(login: login)
         let p = Self.hmacSHA512Base64(password: password, nonce: nonce)
-        let res = try await client.call("Signup", args: [login, p, "PhoenixMK", "", 1, "ru", "ios", "1.0"])
-        // Flutter ignores the Signup response body — we do the same
+        return try await client.call("Signup", args: [login, p, "LunWeb", "", 1, "ru", "ios", "1.0"])
     }
 
     func getPanelGroups() async throws -> [PanelGroup] {
         let res = try await client.call("GetPanelGroups", args: [])
+        // Server may also return panels inside Signup body under "panel" key
         let list = extractList(res)
         return list.compactMap { PanelGroup.from(json: $0) }
+    }
+
+    /// Parse panels directly from Signup response (server returns them there too)
+    func parsePanelsFromSignup(_ res: Any?) -> [PanelGroup] {
+        guard let m = try? parseDict(res),
+              let panel = m["panel"] as? [Any] else { return [] }
+        return panel.compactMap { PanelGroup.from(json: $0) }
     }
 
     func remoteControl(cmd: Int, panel: String, group: Int, num: Int = 0) async throws {
