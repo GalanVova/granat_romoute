@@ -14,7 +14,6 @@ struct CountrySelectView: View {
         ZStack {
             Color.appBackground.ignoresSafeArea()
             VStack(spacing: 0) {
-                // Title
                 HStack {
                     Text("Choose a country")
                         .font(.system(size: 22, weight: .semibold))
@@ -25,12 +24,10 @@ struct CountrySelectView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 16)
 
-                // Search
                 DarkSearchField(text: $query, placeholder: "Search")
                     .padding(.horizontal, 16)
                     .padding(.bottom, 12)
 
-                // List
                 ScrollView {
                     VStack(spacing: 0) {
                         ForEach(filtered) { country in
@@ -40,8 +37,7 @@ struct CountrySelectView: View {
                             } label: {
                                 HStack(spacing: 14) {
                                     RadioDot(selected: selectedCode == country.code)
-                                    Text(country.flag)
-                                        .font(.system(size: 22))
+                                    Text(country.flag).font(.system(size: 22))
                                     Text(country.name)
                                         .font(.system(size: 16))
                                         .foregroundColor(.textPrimary)
@@ -57,7 +53,11 @@ struct CountrySelectView: View {
 
                 Spacer()
 
-                NavigationLink(destination: PCNSelectView(country: appState.country ?? demoCountries[0])) {
+                Button {
+                    if appState.country == nil { appState.setCountry(demoCountries[0]) }
+                    let code = appState.country?.code ?? "UA"
+                    appState.navigate(to: .pcnSelect(code))
+                } label: {
                     Text("Step one")
                         .font(.system(size: 16, weight: .semibold))
                         .frame(maxWidth: .infinity)
@@ -66,9 +66,6 @@ struct CountrySelectView: View {
                         .foregroundColor(.textPrimary)
                         .cornerRadius(10)
                 }
-                .simultaneousGesture(TapGesture().onEnded {
-                    if appState.country == nil { appState.setCountry(demoCountries[0]) }
-                })
                 .padding(16)
             }
         }
@@ -76,6 +73,8 @@ struct CountrySelectView: View {
         .onAppear { selectedCode = appState.country?.code }
     }
 }
+
+// MARK: - Shared components
 
 struct RadioDot: View {
     let selected: Bool
@@ -85,9 +84,7 @@ struct RadioDot: View {
                 .stroke(selected ? Color.primaryRed : Color.inputBorder, lineWidth: 1.5)
                 .frame(width: 20, height: 20)
             if selected {
-                Circle()
-                    .fill(Color.primaryRed)
-                    .frame(width: 10, height: 10)
+                Circle().fill(Color.primaryRed).frame(width: 10, height: 10)
             }
         }
     }
@@ -99,8 +96,7 @@ struct DarkSearchField: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.textSecondary)
+            Image(systemName: "magnifyingglass").foregroundColor(.textSecondary)
             TextField("", text: $text)
                 .placeholder(when: text.isEmpty) {
                     Text(placeholder).foregroundColor(.textSecondary)

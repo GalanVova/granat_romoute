@@ -6,8 +6,6 @@ struct LoginView: View {
     @State private var password = ""
     @State private var showPassword = false
     @State private var error: String?
-    @State private var navigateToShell = false
-    @Environment(\.dismiss) var dismiss
 
     var canLogin: Bool { !login.trimmingCharacters(in: .whitespaces).isEmpty && !password.isEmpty }
 
@@ -15,8 +13,7 @@ struct LoginView: View {
         ZStack {
             Color.appBackground.ignoresSafeArea()
             VStack(alignment: .leading, spacing: 0) {
-                // Back
-                Button { dismiss() } label: {
+                Button { appState.goBack() } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.textPrimary)
@@ -34,14 +31,15 @@ struct LoginView: View {
                     .lineSpacing(4)
                     .padding(.top, 10)
 
-                // Login field
                 DarkInputField(text: $login, placeholder: "Login", isSecure: false)
                     .padding(.top, 20)
 
-                // Password field
-                DarkInputField(text: $password, placeholder: "Password", isSecure: !showPassword, trailingIcon: showPassword ? "eye.slash" : "eye") {
-                    showPassword.toggle()
-                }
+                DarkInputField(
+                    text: $password,
+                    placeholder: "Password",
+                    isSecure: !showPassword,
+                    trailingIcon: showPassword ? "eye.slash" : "eye"
+                ) { showPassword.toggle() }
                 .padding(.top, 12)
 
                 if let error {
@@ -53,20 +51,19 @@ struct LoginView: View {
 
                 Spacer()
 
-                // Log In
                 Button { handleSignIn() } label: {
                     Text("Log In")
                         .font(.system(size: 16, weight: .semibold))
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(canLogin ? Color.buttonDark : Color(hex: "222222"))
+                        .background(canLogin ? Color.buttonDark : Color(hex: "1E1E1E"))
                         .foregroundColor(canLogin ? .textPrimary : .textSecondary)
                         .cornerRadius(10)
                 }
+                .disabled(!canLogin)
                 .padding(.bottom, 12)
 
-                // Forgot password
-                NavigationLink(destination: RecoverPasswordView()) {
+                Button { appState.navigate(to: .recoverPassword) } label: {
                     Text("Forgot password?")
                         .font(.system(size: 16, weight: .semibold))
                         .frame(maxWidth: .infinity)
@@ -76,8 +73,6 @@ struct LoginView: View {
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.textPrimary, lineWidth: 1.5))
                 }
                 .padding(.bottom, 32)
-
-                NavigationLink(destination: ShellView(), isActive: $navigateToShell) { EmptyView() }
             }
             .padding(.horizontal, 20)
         }
@@ -91,7 +86,7 @@ struct LoginView: View {
         guard let pcn else { error = "Monitoring center is not selected."; return }
         error = nil
         appState.setSession(Session(host: pcn.host, port: pcn.port, login: login, password: password))
-        navigateToShell = true
+        appState.navigate(to: .shell)
     }
 }
 

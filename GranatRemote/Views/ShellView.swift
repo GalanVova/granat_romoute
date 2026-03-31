@@ -21,7 +21,6 @@ struct ShellView: View {
         }
         .tint(Color.primaryRed)
         .navigationBarHidden(true)
-        .preferredColorScheme(.dark)
     }
 }
 

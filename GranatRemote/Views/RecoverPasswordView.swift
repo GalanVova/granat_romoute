@@ -1,14 +1,14 @@
 import SwiftUI
 
 struct RecoverPasswordView: View {
+    @EnvironmentObject var appState: AppState
     @State private var phone = ""
-    @Environment(\.dismiss) var dismiss
 
     var body: some View {
         ZStack {
             Color.appBackground.ignoresSafeArea()
             VStack(alignment: .leading, spacing: 0) {
-                Button { dismiss() } label: {
+                Button { appState.goBack() } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundColor(.textPrimary)
@@ -37,7 +37,7 @@ struct RecoverPasswordView: View {
                         .font(.system(size: 16, weight: .semibold))
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
-                        .background(phone.trimmingCharacters(in: .whitespaces).isEmpty ? Color(hex: "222222") : Color.buttonDark)
+                        .background(phone.trimmingCharacters(in: .whitespaces).isEmpty ? Color(hex: "1E1E1E") : Color.buttonDark)
                         .foregroundColor(phone.trimmingCharacters(in: .whitespaces).isEmpty ? .textSecondary : .textPrimary)
                         .cornerRadius(10)
                 }

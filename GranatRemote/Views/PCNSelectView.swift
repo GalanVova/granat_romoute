@@ -5,7 +5,6 @@ struct PCNSelectView: View {
     let country: Country
     @State private var query = ""
     @State private var selectedID: String?
-    @Environment(\.dismiss) var dismiss
 
     var filtered: [PCN] {
         let byCountry = demoPCNs.filter { $0.countryCode == country.code }
@@ -17,9 +16,8 @@ struct PCNSelectView: View {
         ZStack {
             Color.appBackground.ignoresSafeArea()
             VStack(spacing: 0) {
-                // Nav bar
                 HStack {
-                    Button { dismiss() } label: {
+                    Button { appState.goBack() } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 18, weight: .medium))
                             .foregroundColor(.textPrimary)
@@ -69,7 +67,10 @@ struct PCNSelectView: View {
 
                 Spacer()
 
-                NavigationLink(destination: LoginView()) {
+                Button {
+                    if appState.pcn == nil, let first = filtered.first { appState.setPCN(first) }
+                    appState.navigate(to: .login)
+                } label: {
                     Text("Step two")
                         .font(.system(size: 16, weight: .semibold))
                         .frame(maxWidth: .infinity)
@@ -78,17 +79,18 @@ struct PCNSelectView: View {
                         .foregroundColor(.textPrimary)
                         .cornerRadius(10)
                 }
-                .simultaneousGesture(TapGesture().onEnded {
-                    if appState.pcn == nil, let first = filtered.first { appState.setPCN(first) }
-                })
                 .padding(16)
             }
         }
         .navigationBarHidden(true)
         .onAppear {
             appState.setCountry(country)
-            selectedID = appState.pcn?.id ?? filtered.first?.id
-            if let first = filtered.first, appState.pcn == nil { appState.setPCN(first); selectedID = first.id }
+            if let first = filtered.first, appState.pcn == nil {
+                appState.setPCN(first)
+                selectedID = first.id
+            } else {
+                selectedID = appState.pcn?.id
+            }
         }
     }
 }
