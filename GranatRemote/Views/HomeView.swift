@@ -9,7 +9,12 @@ class HomeViewModel: ObservableObject {
     private var client: WampV1Client?
     private var api: LunAPI?
 
-    func load(session: Session) async {
+    func load(session: Session?) async {
+        guard let session, !session.host.isEmpty else {
+            isLoading = false
+            error = "No active session."
+            return
+        }
         isLoading = true
         error = nil
         do {
@@ -79,8 +84,7 @@ struct HomeView: View {
             }
         }
         .task {
-            guard let sess = appState.session else { return }
-            await vm.load(session: sess)
+            await vm.load(session: appState.session)
         }
         .onDisappear { vm.disconnect() }
         .sheet(isPresented: $showOutputSheet) {
