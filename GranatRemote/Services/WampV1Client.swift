@@ -18,11 +18,11 @@ actor WampV1Client {
         self.webSocketTask = task
         task.resume()
 
+        startReceiving()
+
         try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
             self.welcomeContinuation = cont
         }
-
-        startReceiving()
     }
 
     private func startReceiving() {

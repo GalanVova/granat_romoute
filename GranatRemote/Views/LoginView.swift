@@ -77,6 +77,11 @@ struct LoginView: View {
             .padding(.horizontal, 20)
         }
         .navigationBarHidden(true)
+        .onAppear {
+            let args = ProcessInfo.processInfo.arguments
+            if let li = args.firstIndex(of: "-login"), li + 1 < args.count { login = args[li + 1] }
+            if let pi = args.firstIndex(of: "-password"), pi + 1 < args.count { password = args[pi + 1] }
+        }
     }
 
     private func handleSignIn() {

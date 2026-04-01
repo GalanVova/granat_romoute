@@ -37,7 +37,6 @@ struct CountrySelectView: View {
                             } label: {
                                 HStack(spacing: 14) {
                                     RadioDot(selected: selectedCode == country.code)
-                                    Text(country.flag).font(.system(size: 22))
                                     Text(country.name)
                                         .font(.system(size: 16))
                                         .foregroundColor(.textPrimary)
