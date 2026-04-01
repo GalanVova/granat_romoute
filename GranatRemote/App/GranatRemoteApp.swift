@@ -15,14 +15,13 @@ struct GranatRemoteApp: App {
 
 struct RootView: View {
     @EnvironmentObject var appState: AppState
-    // Use ScenePhase-independent flag so SwiftUI state restoration doesn't skip splash
     @State private var splashDone = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         if !splashDone {
             SplashView(onDone: { splashDone = true })
-                .onAppear { appState.logout() } // always reset on fresh launch
+                .onAppear { appState.logout() }
         } else {
             NavigationStack(path: $appState.path) {
                 WelcomeView()
