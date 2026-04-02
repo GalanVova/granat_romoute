@@ -16,6 +16,9 @@ final class AppState: ObservableObject {
     @Published var session: Session?
     @Published var path = NavigationPath()
 
+    /// Shared WAMP API — set by ShellViewModel after successful login
+    @Published var api: LunAPI?
+
     func setCountry(_ c: Country) { country = c; pcn = nil }
     func setPCN(_ p: PCN)         { pcn = p }
 
@@ -25,6 +28,7 @@ final class AppState: ObservableObject {
         session = nil
         country = nil
         pcn = nil
+        api = nil
         path = NavigationPath()
     }
 

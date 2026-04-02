@@ -74,36 +74,78 @@ class LunAPI {
         return PanelState.from(json: res)
     }
 
+    func getBalanceRaw() async throws -> Any? {
+        return try await client.call("GetBalance", args: [])
+    }
+
     func remoteControl(cmd: Int, panel: String, group: Int, num: Int = 0) async throws {
         _ = try await client.call("RemoteControl", args: [cmd, panel, group, num])
     }
 
     func getBalance() async throws -> String {
-        let res = try await client.call("GetBalance", args: [])
-        if let m = res as? [String: Any] {
-            let inner = (m["result"] as? [String: Any]) ?? m
-            for key in ["balance", "bal", "sum", "amount"] {
-                if let v = inner[key] { return "\(v)" }
+        let res = try await getBalanceRaw()
+        func extractFromDict(_ m: [String: Any]) throws -> String? {
+            if let err = m["error"] as? String { throw WampError.callError(err) }
+            // bal is an array of account objects
+            if let balList = m["bal"] as? [[String: Any]] {
+                let parts = balList.compactMap { item -> String? in
+                    guard let sum = item["sum"] else { return nil }
+                    let cn = item["cn"] as? String ?? ""
+                    return cn.isEmpty ? "\(sum)" : "\(sum) (\(cn))"
+                }
+                if !parts.isEmpty { return parts.joined(separator: "\n") }
             }
+            // scalar keys
+            for key in ["balance", "sum", "amount"] {
+                if let v = m[key] { return "\(v)" }
+            }
+            return nil
         }
-        if let s = res as? String, !s.isEmpty { return s }
+        if let m = res as? [String: Any] {
+            if let s = try extractFromDict(m) { return s }
+            if let inner = m["result"] as? [String: Any], let s = try extractFromDict(inner) { return s }
+        }
+        if let s = res as? String {
+            if s.hasPrefix("{"), let data = s.data(using: .utf8),
+               let m = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                if let result = try extractFromDict(m) { return result }
+            }
+            if !s.isEmpty { return s }
+        }
         return "—"
     }
 
     func getHelpText() async throws -> String {
         let res = try await client.call("GetHelpText", args: [])
+        var raw = ""
         if let m = res as? [String: Any] {
             let inner = (m["result"] as? [String: Any]) ?? m
             for key in ["text", "help", "info", "body"] {
-                if let t = inner[key] as? String { return t }
+                if let t = inner[key] as? String { raw = t; break }
             }
+        } else if let s = res as? String {
+            raw = s
         }
-        if let s = res as? String, !s.isEmpty { return s }
-        return ""
+        // If raw looks like a JSON object, try to extract a string value
+        if raw.hasPrefix("{"), let data = raw.data(using: .utf8),
+           let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            raw = obj.values.compactMap { $0 as? String }.first ?? raw
+        }
+        // Decode HTML entities and fix escaped newlines
+        raw = raw
+            .replacingOccurrences(of: "&#160;", with: " ")
+            .replacingOccurrences(of: "&amp;#160;", with: " ")
+            .replacingOccurrences(of: "&nbsp;", with: " ")
+            .replacingOccurrences(of: "\\n", with: "\n")
+            .replacingOccurrences(of: "\\t", with: "    ")
+        return raw
     }
 
     func getEvents() async throws -> [PanelEvent] {
         let res = try await client.call("GetEvents", args: [["fromAllGroup": 1]])
+        if let m = res as? [String: Any], let err = m["error"] as? String {
+            throw WampError.callError(err)
+        }
         let list = extractList(res)
         return list.compactMap { PanelEvent.from(json: $0) }
     }

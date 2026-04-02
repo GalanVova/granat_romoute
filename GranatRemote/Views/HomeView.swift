@@ -6,34 +6,23 @@ class HomeViewModel: ObservableObject {
     @Published var isLoading = true
     @Published var error: String?
 
-    private var client: WampV1Client?
     private var api: LunAPI?
 
-    func load(session: Session?) async {
-        guard let session, !session.host.isEmpty else {
-            isLoading = false
-            error = "No active session."
-            return
-        }
+    func load(api: LunAPI?, session: Session?) async {
+        guard let api else { error = "Not connected"; isLoading = false; return }
+        self.api = api
         isLoading = true
         error = nil
         do {
-            let uri = URL(string: "ws://\(session.host):\(session.port)/")!
-            let c = WampV1Client(uri: uri)
-            try await c.connect()
-            let a = LunAPI(client: c)
-            let signupRes = try await a.signupRaw(login: session.login, password: session.password)
-            var g = a.parsePanelsFromSignup(signupRes)
-            if g.isEmpty {
-                g = try await a.getPanelGroups()
+            var g = try await api.getPanelGroups()
+            if g.isEmpty, let session {
+                if let signupRes = try? await api.signupRaw(login: session.login, password: session.password) {
+                    g = api.parsePanelsFromSignup(signupRes)
+                }
             }
-            session.groups = g
-            self.client = c
-            self.api = a
             self.groups = g
             self.isLoading = false
-            // Load real state for each group
-            await loadStates(groups: g, api: a)
+            await loadStates(groups: g, api: api)
         } catch {
             self.error = error.localizedDescription
             self.isLoading = false
@@ -59,7 +48,7 @@ class HomeViewModel: ObservableObject {
         }
     }
 
-    func disconnect() { Task { await client?.close() } }
+    func disconnect() { }
 }
 
 // MARK: - Shell / Home entry point
@@ -94,9 +83,7 @@ struct HomeView: View {
                 multiGroupView
             }
         }
-        .task {
-            await vm.load(session: appState.session)
-        }
+        .task { await vm.load(api: appState.api, session: appState.session) }
         .onDisappear { vm.disconnect() }
         .sheet(isPresented: $showOutputSheet) {
             OutputNumberSheet(text: $outputNumText) { num in
@@ -173,8 +160,7 @@ struct HomeView: View {
                 .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
             Button("Try again") {
-                guard let sess = appState.session else { return }
-                Task { await vm.load(session: sess) }
+                Task { await vm.load(api: appState.api, session: appState.session) }
             }
             .padding(.horizontal, 24)
             .padding(.vertical, 10)
@@ -217,21 +203,37 @@ struct PanelGroupCard: View {
     let group: PanelGroup
     let onTap: () -> Void
 
+    private var armColor: Color {
+        guard let state = group.state else { return .textSecondary }
+        switch state.armMode {
+        case 1: return .primaryRed
+        case 2: return .orange
+        default: return .selectedGreen
+        }
+    }
+
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
+                // Header row
                 HStack {
                     Text("# \(group.panelId)/\(group.group)")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.textPrimary)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.textSecondary)
                     Spacer()
-                    Image(systemName: "ellipsis")
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.textSecondary)
                 }
+
+                // Name
                 Text(group.name)
-                    .font(.system(size: 15))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.textPrimary)
                     .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+
+                // Address
                 if let addr = group.address {
                     HStack(spacing: 4) {
                         Image(systemName: "mappin")
@@ -243,45 +245,64 @@ struct PanelGroupCard: View {
                             .lineLimit(1)
                     }
                 }
-                // Status icons — real state
-                statusIconsRow
 
-                Image(systemName: "chevron.down.circle")
-                    .foregroundColor(.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 4)
+                Divider().background(Color.inputBorder)
+
+                // Status row: icons + arm badge
+                HStack(spacing: 0) {
+                    statusIconsRow
+                    Spacer()
+                    armStatusBadge
+                }
             }
             .padding(14)
             .background(Color.cardBackground)
             .cornerRadius(12)
         }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
     private var statusIconsRow: some View {
-        if let state = group.state {
-            HStack(spacing: 10) {
+        HStack(spacing: 12) {
+            if let state = group.state {
                 Image(systemName: "antenna.radiowaves.left.and.right")
                     .foregroundColor(state.hasSignal ? .selectedGreen : .textSecondary)
-                Image(systemName: "battery.100")
-                    .foregroundColor(state.hasBattery ? .selectedGreen : .textSecondary)
                 Image(systemName: "bolt")
                     .foregroundColor(state.hasMainPower ? .selectedGreen : .textSecondary)
+                Image(systemName: "battery.100")
+                    .foregroundColor(state.hasBattery ? .selectedGreen : .textSecondary)
+                if state.hasWifi {
+                    Image(systemName: "wifi").foregroundColor(.selectedGreen)
+                }
                 if state.hasCamera {
-                    Image(systemName: "video")
-                        .foregroundColor(.selectedGreen)
+                    Image(systemName: "video").foregroundColor(.selectedGreen)
                 }
-                Image(systemName: "wifi")
-                    .foregroundColor(state.hasWifi ? .selectedGreen : .textSecondary)
+            } else {
+                Image(systemName: "antenna.radiowaves.left.and.right").foregroundColor(.textSecondary)
+                Image(systemName: "bolt").foregroundColor(.textSecondary)
+                Image(systemName: "battery.100").foregroundColor(.textSecondary)
             }
-            .font(.system(size: 13))
+        }
+        .font(.system(size: 14))
+    }
+
+    @ViewBuilder
+    private var armStatusBadge: some View {
+        if let state = group.state {
+            HStack(spacing: 4) {
+                Image(systemName: state.armMode == 1 ? "lock.fill" : (state.armMode == 2 ? "house.fill" : "lock.open.fill"))
+                    .font(.system(size: 11, weight: .semibold))
+                Text(state.armLabel)
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundColor(armColor)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(armColor.opacity(0.15))
+            .cornerRadius(8)
         } else {
-            HStack(spacing: 10) {
-                ForEach(["antenna.radiowaves.left.and.right", "battery.100", "bolt", "wifi"], id: \.self) { icon in
-                    Image(systemName: icon).foregroundColor(.textSecondary)
-                }
-            }
-            .font(.system(size: 13))
+            ProgressView().scaleEffect(0.5).frame(width: 40)
         }
     }
 }
@@ -292,22 +313,31 @@ struct SingleGroupView: View {
     let onCommand: (Int, Int) -> Void
     let onBack: () -> Void
 
+    private var armColor: Color {
+        guard let state = group.state else { return .textSecondary }
+        switch state.armMode {
+        case 1: return .primaryRed
+        case 2: return .orange
+        default: return .selectedGreen
+        }
+    }
+
     let commands: [(String, String, Int)] = [
-        ("house",                    "Arm stay\nat home",    55),
-        ("lock.open",                "Disarm",              53),
-        ("lock",                     "Arm",                 52),
-        ("sos",                      "SOS\nAlarm Button",   54),
-        ("power",                    "Turn on/off\nexit",   43),
-        ("arrow.up.right.square",    "Request\noutput st.", 44),
+        ("house.fill",               "Arm stay\nat home",    55),
+        ("lock.open.fill",           "Disarm",              53),
+        ("lock.fill",                "Arm",                 52),
+        ("sos",                      "SOS\nAlarm",          54),
+        ("power",                    "Toggle\noutput",      43),
+        ("arrow.up.right.square",    "Output\nstatus",      44),
     ]
 
     var body: some View {
         VStack(spacing: 0) {
-            // Nav
+            // Nav bar
             HStack {
                 Button(action: onBack) {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.textPrimary)
                 }
                 Spacer()
@@ -322,16 +352,15 @@ struct SingleGroupView: View {
             .padding(.vertical, 14)
 
             // Info card
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Text("# \(group.panelId)/\(group.group)")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.textPrimary)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.textSecondary)
                     Spacer()
-                    Image(systemName: "ellipsis").foregroundColor(.textSecondary)
                 }
                 Text(group.name)
-                    .font(.system(size: 15))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.textPrimary)
                 if let addr = group.address {
                     HStack(spacing: 4) {
@@ -339,64 +368,61 @@ struct SingleGroupView: View {
                         Text(addr).font(.system(size: 12)).foregroundColor(.textSecondary).lineLimit(1)
                     }
                 }
-                // Real status icons
-                if let state = group.state {
-                    HStack(spacing: 10) {
-                        Image(systemName: "antenna.radiowaves.left.and.right")
-                            .foregroundColor(state.hasSignal ? .selectedGreen : .textSecondary)
-                        Image(systemName: "battery.100")
-                            .foregroundColor(state.hasBattery ? .selectedGreen : .textSecondary)
-                        Image(systemName: "bolt")
-                            .foregroundColor(state.hasMainPower ? .selectedGreen : .textSecondary)
-                        if state.hasCamera {
-                            Image(systemName: "video").foregroundColor(.selectedGreen)
-                        }
-                        Image(systemName: "wifi")
-                            .foregroundColor(state.hasWifi ? .selectedGreen : .textSecondary)
-                    }
-                    .font(.system(size: 13))
-                } else {
-                    HStack(spacing: 10) {
-                        ForEach(["antenna.radiowaves.left.and.right", "battery.100", "bolt", "wifi"], id: \.self) { icon in
-                            Image(systemName: icon).foregroundColor(.textSecondary)
-                        }
-                    }
-                    .font(.system(size: 13))
-                }
 
-                // Real arm status
-                HStack(spacing: 6) {
-                    Text("Object status")
-                        .font(.system(size: 12))
-                        .foregroundColor(.textSecondary)
+                Divider().background(Color.inputBorder)
+
+                // Status icons + arm badge
+                HStack(spacing: 0) {
                     if let state = group.state {
-                        let armColor: Color = state.armMode == 0 ? .selectedGreen : (state.armMode == 1 ? .primaryRed : .orange)
-                        Image(systemName: state.isArmed ? "lock" : "lock.open")
-                            .font(.system(size: 12))
-                            .foregroundColor(armColor)
-                        Text(state.armLabel)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(armColor)
+                        HStack(spacing: 12) {
+                            Image(systemName: "antenna.radiowaves.left.and.right")
+                                .foregroundColor(state.hasSignal ? .selectedGreen : .textSecondary)
+                            Image(systemName: "bolt")
+                                .foregroundColor(state.hasMainPower ? .selectedGreen : .textSecondary)
+                            Image(systemName: "battery.100")
+                                .foregroundColor(state.hasBattery ? .selectedGreen : .textSecondary)
+                            if state.hasWifi {
+                                Image(systemName: "wifi").foregroundColor(.selectedGreen)
+                            }
+                            if state.hasCamera {
+                                Image(systemName: "video").foregroundColor(.selectedGreen)
+                            }
+                        }
+                        .font(.system(size: 15))
                     } else {
-                        ProgressView().scaleEffect(0.6)
+                        HStack(spacing: 12) {
+                            Image(systemName: "antenna.radiowaves.left.and.right")
+                            Image(systemName: "bolt")
+                            Image(systemName: "battery.100")
+                        }
+                        .font(.system(size: 15))
+                        .foregroundColor(.textSecondary)
+                    }
+
+                    Spacer()
+
+                    // Arm status badge
+                    if let state = group.state {
+                        HStack(spacing: 5) {
+                            Image(systemName: state.armMode == 1 ? "lock.fill" : (state.armMode == 2 ? "house.fill" : "lock.open.fill"))
+                                .font(.system(size: 12, weight: .semibold))
+                            Text(state.armLabel)
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .foregroundColor(armColor)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(armColor.opacity(0.15))
+                        .cornerRadius(8)
+                    } else {
+                        ProgressView().scaleEffect(0.6).frame(width: 50)
                     }
                 }
-                .padding(.top, 2)
             }
             .padding(14)
             .background(Color.cardBackground)
             .cornerRadius(12)
             .padding(.horizontal, 16)
-
-            // Page dots
-            HStack(spacing: 6) {
-                ForEach(0..<3) { i in
-                    Circle()
-                        .fill(i == 1 ? Color.textPrimary : Color.inputBorder)
-                        .frame(width: 6, height: 6)
-                }
-            }
-            .padding(.vertical, 12)
 
             // Commands grid
             ScrollView {
@@ -408,6 +434,7 @@ struct SingleGroupView: View {
                     }
                 }
                 .padding(.horizontal, 16)
+                .padding(.top, 16)
             }
         }
     }

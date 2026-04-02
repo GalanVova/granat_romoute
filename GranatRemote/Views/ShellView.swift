@@ -1,26 +1,69 @@
 import SwiftUI
 
+@MainActor
+class ShellViewModel: ObservableObject {
+    private var client: WampV1Client?
+
+    func connect(session: Session?) async -> LunAPI? {
+        guard let session else { return nil }
+        do {
+            let uri = URL(string: "ws://\(session.host):\(session.port)/")!
+            let c = WampV1Client(uri: uri)
+            try await c.connect()
+            let a = LunAPI(client: c)
+            _ = try await a.signupRaw(login: session.login, password: session.password)
+            self.client = c
+            return a
+        } catch {
+            return nil
+        }
+    }
+
+    func disconnect() { Task { await client?.close() }; client = nil }
+}
+
 struct ShellView: View {
     @EnvironmentObject var appState: AppState
-    @State private var selectedTab = 0
+    @StateObject private var shellVM = ShellViewModel()
+    @State private var selectedTab: Int = {
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-tab"), i + 1 < args.count {
+            return Int(args[i + 1]) ?? 0
+        }
+        return 0
+    }()
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            HomeView()
-                .tabItem { Label("Home",    systemImage: "house.fill") }
-                .tag(0)
-            NotificationsView()
-                .tabItem { Label("Events",  systemImage: "bell.fill") }
-                .tag(1)
-            BalanceView()
-                .tabItem { Label("Balance", systemImage: "creditcard.fill") }
-                .tag(2)
-            HelpView()
-                .tabItem { Label("Help",    systemImage: "questionmark.circle.fill") }
-                .tag(3)
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            if let api = appState.api {
+                TabView(selection: $selectedTab) {
+                    HomeView()
+                        .tabItem { Label("Home",    systemImage: "house.fill") }
+                        .tag(0)
+                    NotificationsView()
+                        .tabItem { Label("Events",  systemImage: "bell.fill") }
+                        .tag(1)
+                    BalanceView()
+                        .tabItem { Label("Balance", systemImage: "creditcard.fill") }
+                        .tag(2)
+                    HelpView()
+                        .tabItem { Label("Help",    systemImage: "questionmark.circle.fill") }
+                        .tag(3)
+                }
+                .tint(Color.primaryRed)
+                .id(ObjectIdentifier(api))
+            } else {
+                ProgressView().tint(.textSecondary)
+            }
         }
-        .tint(Color.primaryRed)
         .navigationBarHidden(true)
+        .task {
+            if appState.api == nil {
+                appState.api = await shellVM.connect(session: appState.session)
+            }
+        }
+        .onDisappear { shellVM.disconnect() }
     }
 }
 
@@ -32,19 +75,13 @@ class BalanceViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
 
-    func load(session: Session?) async {
-        guard let session else { return }
+    func load(api: LunAPI?) async {
+        guard let api else { error = "Not connected"; return }
         isLoading = true
         error = nil
         do {
-            let uri = URL(string: "ws://\(session.host):\(session.port)/")!
-            let c = WampV1Client(uri: uri)
-            try await c.connect()
-            let a = LunAPI(client: c)
-            _ = try await a.signupRaw(login: session.login, password: session.password)
-            balance = try await a.getBalance()
+            balance = try await api.getBalance()
             isLoading = false
-            await c.close()
         } catch {
             self.error = error.localizedDescription
             isLoading = false
@@ -73,17 +110,47 @@ struct BalanceView: View {
                         .padding(.horizontal, 24)
                 }
             } else {
-                VStack(spacing: 16) {
-                    Text("Balance")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundColor(.textPrimary)
-                    Text(vm.balance.isEmpty ? "—" : vm.balance)
-                        .font(.system(size: 36, weight: .bold))
-                        .foregroundColor(.primaryRed)
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Balance")
+                            .font(.system(size: 22, weight: .semibold))
+                            .foregroundColor(.textPrimary)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 20)
+                            .padding(.bottom, 16)
+                        let lines = vm.balance.isEmpty ? ["—"] : vm.balance.components(separatedBy: "\n")
+                        ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                            HStack {
+                                // parse "sum (cn)" format
+                                let parts = line.components(separatedBy: " (")
+                                VStack(alignment: .leading, spacing: 4) {
+                                    if parts.count == 2 {
+                                        let cn = parts[1].replacingOccurrences(of: ")", with: "")
+                                        Text("Contract \(cn)")
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.textSecondary)
+                                        Text(parts[0])
+                                            .font(.system(size: 28, weight: .bold))
+                                            .foregroundColor(.textPrimary)
+                                    } else {
+                                        Text(line)
+                                            .font(.system(size: 28, weight: .bold))
+                                            .foregroundColor(.textPrimary)
+                                    }
+                                }
+                                Spacer()
+                            }
+                            .padding(16)
+                            .background(Color.cardBackground)
+                            .cornerRadius(12)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 10)
+                        }
+                    }
                 }
             }
         }
-        .task { await vm.load(session: appState.session) }
+        .task { await vm.load(api: appState.api) }
     }
 }
 
@@ -95,19 +162,13 @@ class HelpViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
 
-    func load(session: Session?) async {
-        guard let session else { return }
+    func load(api: LunAPI?) async {
+        guard let api else { error = "Not connected"; return }
         isLoading = true
         error = nil
         do {
-            let uri = URL(string: "ws://\(session.host):\(session.port)/")!
-            let c = WampV1Client(uri: uri)
-            try await c.connect()
-            let a = LunAPI(client: c)
-            _ = try await a.signupRaw(login: session.login, password: session.password)
-            text = try await a.getHelpText()
+            text = try await api.getHelpText()
             isLoading = false
-            await c.close()
         } catch {
             self.error = error.localizedDescription
             isLoading = false
@@ -154,7 +215,7 @@ struct HelpView: View {
                 }
             }
         }
-        .task { await vm.load(session: appState.session) }
+        .task { await vm.load(api: appState.api) }
     }
 }
 
@@ -166,19 +227,13 @@ class NotificationsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
 
-    func load(session: Session?) async {
-        guard let session else { return }
+    func load(api: LunAPI?) async {
+        guard let api else { error = "Not connected"; return }
         isLoading = true
         error = nil
         do {
-            let uri = URL(string: "ws://\(session.host):\(session.port)/")!
-            let c = WampV1Client(uri: uri)
-            try await c.connect()
-            let a = LunAPI(client: c)
-            _ = try await a.signupRaw(login: session.login, password: session.password)
-            events = try await a.getEvents()
+            events = try await api.getEvents()
             isLoading = false
-            await c.close()
         } catch {
             self.error = error.localizedDescription
             isLoading = false
@@ -251,6 +306,6 @@ struct NotificationsView: View {
                 }
             }
         }
-        .task { await vm.load(session: appState.session) }
+        .task { await vm.load(api: appState.api) }
     }
 }
