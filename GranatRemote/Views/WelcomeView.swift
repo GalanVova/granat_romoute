@@ -35,7 +35,11 @@ struct WelcomeView: View {
             VStack {
                 Spacer()
                 Button {
-                    appState.navigate(to: .countrySelect)
+                    if appState.session != nil {
+                        appState.navigate(to: .shell)
+                    } else {
+                        appState.navigate(to: .countrySelect)
+                    }
                 } label: {
                     Text("Start")
                         .font(.system(size: 16, weight: .bold))
@@ -50,5 +54,10 @@ struct WelcomeView: View {
             }
         }
         .navigationBarHidden(true)
+        .onAppear {
+            if appState.session != nil {
+                appState.navigate(to: .shell)
+            }
+        }
     }
 }

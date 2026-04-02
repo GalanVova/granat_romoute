@@ -23,7 +23,6 @@ class HomeViewModel: ObservableObject {
             try await c.connect()
             let a = LunAPI(client: c)
             let signupRes = try await a.signupRaw(login: session.login, password: session.password)
-            // Server returns panels in Signup response — use them directly
             var g = a.parsePanelsFromSignup(signupRes)
             if g.isEmpty {
                 g = try await a.getPanelGroups()
@@ -33,16 +32,28 @@ class HomeViewModel: ObservableObject {
             self.api = a
             self.groups = g
             self.isLoading = false
+            // Load real state for each group
+            await loadStates(groups: g, api: a)
         } catch {
             self.error = error.localizedDescription
             self.isLoading = false
         }
     }
 
+    private func loadStates(groups: [PanelGroup], api: LunAPI) async {
+        var updated = groups
+        for i in updated.indices {
+            if let state = try? await api.getPanelState(panel: updated[i].panelId, group: updated[i].group) {
+                updated[i].state = state
+            }
+        }
+        self.groups = updated
+    }
+
     func sendCommand(group: PanelGroup, cmd: Int, num: Int = 0) async {
         guard let api else { return }
         do {
-            try await api.remoteControl(cmd: cmd, panel: group.id, group: group.group, num: num)
+            try await api.remoteControl(cmd: cmd, panel: group.panelId, group: group.group, num: num)
         } catch {
             self.error = "Command error: \(error.localizedDescription)"
         }
@@ -134,9 +145,6 @@ struct HomeView: View {
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.textPrimary)
                 Spacer()
-                Button("Select") {}
-                    .font(.system(size: 14))
-                    .foregroundColor(.primaryRed)
             }
             .padding(.horizontal, 20)
             .padding(.bottom, 10)
@@ -213,7 +221,7 @@ struct PanelGroupCard: View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text("# \(group.id)/\(group.group)")
+                    Text("# \(group.panelId)/\(group.group)")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.textPrimary)
                     Spacer()
@@ -235,20 +243,8 @@ struct PanelGroupCard: View {
                             .lineLimit(1)
                     }
                 }
-                // Status icons row
-                HStack(spacing: 10) {
-                    Image(systemName: "antenna.radiowaves.left.and.right")
-                        .foregroundColor(.selectedGreen)
-                    Image(systemName: "battery.100")
-                        .foregroundColor(.selectedGreen)
-                    Image(systemName: "bolt")
-                        .foregroundColor(.selectedGreen)
-                    Image(systemName: "video")
-                        .foregroundColor(.selectedGreen)
-                    Image(systemName: "wifi")
-                        .foregroundColor(.selectedGreen)
-                }
-                .font(.system(size: 13))
+                // Status icons — real state
+                statusIconsRow
 
                 Image(systemName: "chevron.down.circle")
                     .foregroundColor(.textSecondary)
@@ -260,6 +256,34 @@ struct PanelGroupCard: View {
             .cornerRadius(12)
         }
     }
+
+    @ViewBuilder
+    private var statusIconsRow: some View {
+        if let state = group.state {
+            HStack(spacing: 10) {
+                Image(systemName: "antenna.radiowaves.left.and.right")
+                    .foregroundColor(state.hasSignal ? .selectedGreen : .textSecondary)
+                Image(systemName: "battery.100")
+                    .foregroundColor(state.hasBattery ? .selectedGreen : .textSecondary)
+                Image(systemName: "bolt")
+                    .foregroundColor(state.hasMainPower ? .selectedGreen : .textSecondary)
+                if state.hasCamera {
+                    Image(systemName: "video")
+                        .foregroundColor(.selectedGreen)
+                }
+                Image(systemName: "wifi")
+                    .foregroundColor(state.hasWifi ? .selectedGreen : .textSecondary)
+            }
+            .font(.system(size: 13))
+        } else {
+            HStack(spacing: 10) {
+                ForEach(["antenna.radiowaves.left.and.right", "battery.100", "bolt", "wifi"], id: \.self) { icon in
+                    Image(systemName: icon).foregroundColor(.textSecondary)
+                }
+            }
+            .font(.system(size: 13))
+        }
+    }
 }
 
 // MARK: - Single group commands grid
@@ -269,12 +293,12 @@ struct SingleGroupView: View {
     let onBack: () -> Void
 
     let commands: [(String, String, Int)] = [
-        ("house",                    "Arm stay at home",    55),
+        ("house",                    "Arm stay\nat home",    55),
         ("lock.open",                "Disarm",              53),
         ("lock",                     "Arm",                 52),
         ("sos",                      "SOS\nAlarm Button",   54),
-        ("power",                    "Turn on/off exit",    43),
-        ("arrow.up.right.square",    "Request output st...", 44),
+        ("power",                    "Turn on/off\nexit",   43),
+        ("arrow.up.right.square",    "Request\noutput st.", 44),
     ]
 
     var body: some View {
@@ -300,7 +324,7 @@ struct SingleGroupView: View {
             // Info card
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text("# \(group.id)/\(group.group)")
+                    Text("# \(group.panelId)/\(group.group)")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.textPrimary)
                     Spacer()
@@ -315,23 +339,47 @@ struct SingleGroupView: View {
                         Text(addr).font(.system(size: 12)).foregroundColor(.textSecondary).lineLimit(1)
                     }
                 }
-                HStack(spacing: 10) {
-                    ForEach(["wifi","battery.100","bolt","video"], id: \.self) { icon in
-                        Image(systemName: icon).foregroundColor(.selectedGreen)
+                // Real status icons
+                if let state = group.state {
+                    HStack(spacing: 10) {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .foregroundColor(state.hasSignal ? .selectedGreen : .textSecondary)
+                        Image(systemName: "battery.100")
+                            .foregroundColor(state.hasBattery ? .selectedGreen : .textSecondary)
+                        Image(systemName: "bolt")
+                            .foregroundColor(state.hasMainPower ? .selectedGreen : .textSecondary)
+                        if state.hasCamera {
+                            Image(systemName: "video").foregroundColor(.selectedGreen)
+                        }
+                        Image(systemName: "wifi")
+                            .foregroundColor(state.hasWifi ? .selectedGreen : .textSecondary)
                     }
+                    .font(.system(size: 13))
+                } else {
+                    HStack(spacing: 10) {
+                        ForEach(["antenna.radiowaves.left.and.right", "battery.100", "bolt", "wifi"], id: \.self) { icon in
+                            Image(systemName: icon).foregroundColor(.textSecondary)
+                        }
+                    }
+                    .font(.system(size: 13))
                 }
-                .font(.system(size: 13))
 
+                // Real arm status
                 HStack(spacing: 6) {
                     Text("Object status")
                         .font(.system(size: 12))
                         .foregroundColor(.textSecondary)
-                    Image(systemName: "lock.open")
-                        .font(.system(size: 12))
-                        .foregroundColor(.selectedGreen)
-                    Text("Disarmed")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.selectedGreen)
+                    if let state = group.state {
+                        let armColor: Color = state.armMode == 0 ? .selectedGreen : (state.armMode == 1 ? .primaryRed : .orange)
+                        Image(systemName: state.isArmed ? "lock" : "lock.open")
+                            .font(.system(size: 12))
+                            .foregroundColor(armColor)
+                        Text(state.armLabel)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(armColor)
+                    } else {
+                        ProgressView().scaleEffect(0.6)
+                    }
                 }
                 .padding(.top, 2)
             }

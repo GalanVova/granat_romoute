@@ -1,6 +1,25 @@
 import Foundation
 import CryptoKit
 
+struct PanelEvent: Identifiable {
+    let id: String
+    let panelId: String
+    let group: Int
+    let text: String
+    let time: String
+
+    static func from(json: Any) -> PanelEvent? {
+        guard let m = json as? [String: Any] else { return nil }
+        let eid = "\(m["id"] ?? m["eid"] ?? UUID().uuidString)"
+        let panelId = "\(m["pid"] ?? m["panel"] ?? m["pnl"] ?? "")"
+        let gr = Int("\(m["gr"] ?? 0)") ?? 0
+        let text = m["msg"] as? String ?? m["text"] as? String ?? m["nm"] as? String ?? m["dsc"] as? String ?? ""
+        let time = m["time"] as? String ?? m["dt"] as? String ?? m["date"] as? String ?? ""
+        guard !text.isEmpty else { return nil }
+        return PanelEvent(id: eid, panelId: panelId, group: gr, text: text, time: time)
+    }
+}
+
 class LunAPI {
     private let client: WampV1Client
 
@@ -10,7 +29,6 @@ class LunAPI {
 
     func generateNonce(login: String) async throws -> String {
         let res = try await client.call("GenerateNonce", args: [login])
-        // Server returns nonce as JSON string: "{\"nonce\":\"XXX\"}" or as dict
         let m = try parseDict(res)
         if let nonce = m["nonce"] { return "\(nonce)" }
         if let inner = m["result"] as? [String: Any], let nonce = inner["nonce"] { return "\(nonce)" }
@@ -18,7 +36,6 @@ class LunAPI {
     }
 
     static func hmacSHA512Base64(password: String, nonce: String) -> String {
-        // msg = nonce + password  (matches the working Python/Windows desktop app)
         let key = SymmetricKey(data: Data(password.utf8))
         let msg = Data((nonce + password).utf8)
         let mac = HMAC<SHA512>.authenticationCode(for: msg, using: key)
@@ -37,25 +54,62 @@ class LunAPI {
 
     func getPanelGroups() async throws -> [PanelGroup] {
         let res = try await client.call("GetPanelGroups", args: [])
-        // Server may also return panels inside Signup body under "panel" key
         let list = extractList(res)
-        return list.compactMap { PanelGroup.from(json: $0) }
+        return deduplicatedGroups(list.compactMap { PanelGroup.from(json: $0) })
     }
 
-    /// Parse panels directly from Signup response (server returns them there too)
     func parsePanelsFromSignup(_ res: Any?) -> [PanelGroup] {
         guard let m = try? parseDict(res),
               let panel = m["panel"] as? [Any] else { return [] }
-        return panel.compactMap { PanelGroup.from(json: $0) }
+        return deduplicatedGroups(panel.compactMap { PanelGroup.from(json: $0) })
+    }
+
+    private func deduplicatedGroups(_ groups: [PanelGroup]) -> [PanelGroup] {
+        var seen = Set<String>()
+        return groups.filter { seen.insert($0.id).inserted }
+    }
+
+    func getPanelState(panel: String, group: Int) async throws -> PanelState? {
+        let res = try await client.call("GetPanelState", args: [panel, group])
+        return PanelState.from(json: res)
     }
 
     func remoteControl(cmd: Int, panel: String, group: Int, num: Int = 0) async throws {
         _ = try await client.call("RemoteControl", args: [cmd, panel, group, num])
     }
 
+    func getBalance() async throws -> String {
+        let res = try await client.call("GetBalance", args: [])
+        if let m = res as? [String: Any] {
+            let inner = (m["result"] as? [String: Any]) ?? m
+            for key in ["balance", "bal", "sum", "amount"] {
+                if let v = inner[key] { return "\(v)" }
+            }
+        }
+        if let s = res as? String, !s.isEmpty { return s }
+        return "—"
+    }
+
+    func getHelpText() async throws -> String {
+        let res = try await client.call("GetHelpText", args: [])
+        if let m = res as? [String: Any] {
+            let inner = (m["result"] as? [String: Any]) ?? m
+            for key in ["text", "help", "info", "body"] {
+                if let t = inner[key] as? String { return t }
+            }
+        }
+        if let s = res as? String, !s.isEmpty { return s }
+        return ""
+    }
+
+    func getEvents() async throws -> [PanelEvent] {
+        let res = try await client.call("GetEvents", args: [["fromAllGroup": 1]])
+        let list = extractList(res)
+        return list.compactMap { PanelEvent.from(json: $0) }
+    }
+
     // MARK: - Helpers
 
-    /// Parse result that may be a [String:Any] dict OR a JSON string encoding such a dict.
     private func parseDict(_ value: Any?) throws -> [String: Any] {
         if let m = value as? [String: Any] { return m }
         if let s = value as? String,
@@ -68,10 +122,15 @@ class LunAPI {
 
     private func extractList(_ res: Any?) -> [Any] {
         if let m = res as? [String: Any] {
-            if let list = m["pnls"] as? [Any] { return list }
-            if let inner = m["result"] as? [String: Any], let list = inner["pnls"] as? [Any] { return list }
+            for key in ["pnls", "groups", "events", "items", "list"] {
+                if let list = m[key] as? [Any] { return list }
+            }
+            if let inner = m["result"] as? [String: Any] {
+                for key in ["pnls", "groups", "events", "items", "list"] {
+                    if let list = inner[key] as? [Any] { return list }
+                }
+            }
         }
-        // May arrive as JSON string
         if let s = res as? String,
            let data = s.data(using: .utf8),
            let m = try? JSONSerialization.jsonObject(with: data) as? [String: Any],

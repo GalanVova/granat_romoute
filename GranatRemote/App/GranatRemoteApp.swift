@@ -21,7 +21,19 @@ struct RootView: View {
     var body: some View {
         if !splashDone {
             SplashView(onDone: { splashDone = true })
-                .onAppear { appState.logout() }
+                .onAppear {
+                    appState.logout()
+                    // Auto-login via launch args: -login <l> -password <p>
+                    let args = ProcessInfo.processInfo.arguments
+                    if let li = args.firstIndex(of: "-login"), li + 1 < args.count,
+                       let pi = args.firstIndex(of: "-password"), pi + 1 < args.count {
+                        let login = args[li + 1]
+                        let pass  = args[pi + 1]
+                        let pcn = demoPCNs.first!
+                        appState.setPCN(pcn)
+                        appState.setSession(Session(host: pcn.host, port: pcn.port, login: login, password: pass))
+                    }
+                }
         } else {
             NavigationStack(path: $appState.path) {
                 WelcomeView()
