@@ -419,20 +419,18 @@ struct SingleGroupView: View {
             .padding(.horizontal, 16)
 
             // Commands grid + cameras
-            NavigationStack {
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                        ForEach(commands, id: \.2) { (icon, label, cmd) in
-                            CommandGridButton(icon: icon, label: label) { onCommand(cmd, 0) }
-                        }
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    ForEach(commands, id: \.2) { (icon, label, cmd) in
+                        CommandGridButton(icon: icon, label: label) { onCommand(cmd, 0) }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 16)
-
-                    PanelCamerasSection(panelGroupId: group.id)
-                        .environmentObject(settings)
-                        .padding(.top, 4)
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
+
+                PanelCamerasSection(panelGroupId: group.id)
+                    .environmentObject(settings)
+                    .padding(.top, 4)
             }
         }
     }
