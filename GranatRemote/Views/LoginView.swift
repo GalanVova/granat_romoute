@@ -92,7 +92,6 @@ struct LoginView: View {
         error = nil
         appState.setSession(Session(host: pcn.host, port: pcn.port, login: login, password: password))
         appState.saveCredentials()
-        appState.navigate(to: .shell)
     }
 }
 

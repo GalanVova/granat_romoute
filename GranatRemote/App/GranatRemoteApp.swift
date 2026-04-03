@@ -31,7 +31,7 @@ struct RootView: View {
         if !splashDone {
             SplashView(onDone: { splashDone = true })
                 .onAppear {
-                    AppDelegate.appState = appState   // give AppDelegate a weak ref
+                    AppDelegate.appState = appState
                     appState.logout()
                     // Priority 1: launch args
                     let args = ProcessInfo.processInfo.arguments
@@ -43,11 +43,14 @@ struct RootView: View {
                         appState.setPCN(pcn)
                         appState.setSession(Session(host: pcn.host, port: pcn.port, login: login, password: pass))
                     } else {
-                        // Priority 2: saved credentials
                         _ = appState.loadSavedCredentials()
                     }
                 }
+        } else if appState.session != nil {
+            // Logged in — ShellView is root, completely separate from pre-login NavigationStack
+            ShellView()
         } else {
+            // Not logged in — pre-login flow in its own NavigationStack
             NavigationStack(path: $appState.path) {
                 WelcomeView()
                     .navigationDestination(for: AppRoute.self) { route in
@@ -59,7 +62,7 @@ struct RootView: View {
                             PCNSelectView(country: country)
                         case .login:         LoginView()
                         case .recoverPassword: RecoverPasswordView()
-                        case .shell:         ShellView()
+                        case .shell:         EmptyView()
                         }
                     }
             }
