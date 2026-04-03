@@ -43,21 +43,35 @@ struct ShellView: View {
             Color.appBackground.ignoresSafeArea()
             if let api = appState.api {
                 TabView(selection: $selectedTab) {
-                    HomeView()
-                        .tabItem { Label(s("tab.home"),     systemImage: "house.fill") }
-                        .tag(0)
-                    NotificationsView()
-                        .tabItem { Label(s("tab.events"),   systemImage: "bell.fill") }
-                        .tag(1)
-                    BalanceView()
-                        .tabItem { Label(s("tab.balance"),  systemImage: "creditcard.fill") }
-                        .tag(2)
-                    HelpView()
-                        .tabItem { Label(s("tab.help"),     systemImage: "questionmark.circle.fill") }
-                        .tag(3)
-                    SettingsView()
-                        .tabItem { Label(s("tab.settings"), systemImage: "gearshape.fill") }
-                        .tag(4)
+                    NavigationStack {
+                        HomeView()
+                    }
+                    .tabItem { Label(s("tab.home"),     systemImage: "house.fill") }
+                    .tag(0)
+
+                    NavigationStack {
+                        NotificationsView()
+                    }
+                    .tabItem { Label(s("tab.events"),   systemImage: "bell.fill") }
+                    .tag(1)
+
+                    NavigationStack {
+                        BalanceView()
+                    }
+                    .tabItem { Label(s("tab.balance"),  systemImage: "creditcard.fill") }
+                    .tag(2)
+
+                    NavigationStack {
+                        HelpView()
+                    }
+                    .tabItem { Label(s("tab.help"),     systemImage: "questionmark.circle.fill") }
+                    .tag(3)
+
+                    NavigationStack {
+                        SettingsView()
+                    }
+                    .tabItem { Label(s("tab.settings"), systemImage: "gearshape.fill") }
+                    .tag(4)
                 }
                 .tint(Color.primaryRed)
                 .id(ObjectIdentifier(api))

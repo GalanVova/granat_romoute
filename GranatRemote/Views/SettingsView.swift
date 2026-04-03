@@ -14,11 +14,10 @@ struct SettingsView: View {
     private func s(_ key: String) -> String { appSettings.t(key) }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.appBackground.ignoresSafeArea()
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 0) {
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
                         Text(s("settings.title"))
                             .font(.system(size: 22, weight: .semibold))
                             .foregroundColor(.textPrimary)
@@ -183,7 +182,6 @@ struct SettingsView: View {
                 }
             }
             .navigationBarHidden(true)
-        }
         .sheet(isPresented: $showAddCamera) {
             CameraEditSheet(settings: appSettings, panelGroupId: nil) { cam in
                 cameraStore.add(cam)
