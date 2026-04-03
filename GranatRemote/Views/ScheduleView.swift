@@ -166,6 +166,7 @@ struct ScheduleRuleCard: View {
 struct ScheduleEditSheet: View {
     let settings: AppSettings
     var existing: ScheduleRule?
+    var panelGroupId: String?
     let onSave: (ScheduleRule) -> Void
     let onCancel: () -> Void
 
@@ -175,13 +176,14 @@ struct ScheduleEditSheet: View {
 
     private func s(_ k: String) -> String { settings.t(k) }
 
-    init(settings: AppSettings, existing: ScheduleRule?,
+    init(settings: AppSettings, existing: ScheduleRule?, panelGroupId: String? = nil,
          onSave: @escaping (ScheduleRule) -> Void,
          onCancel: @escaping () -> Void) {
-        self.settings  = settings
-        self.existing  = existing
-        self.onSave    = onSave
-        self.onCancel  = onCancel
+        self.settings      = settings
+        self.existing      = existing
+        self.panelGroupId  = panelGroupId ?? existing?.panelGroupId
+        self.onSave        = onSave
+        self.onCancel      = onCancel
 
         var cal = Calendar.current
         cal.timeZone = .current
@@ -269,6 +271,7 @@ struct ScheduleEditSheet: View {
                         rule.hour   = cal.component(.hour, from: time)
                         rule.minute = cal.component(.minute, from: time)
                         rule.days   = days.isEmpty ? Weekday.everyday : days
+                        rule.panelGroupId = panelGroupId
                         onSave(rule)
                     }
                     .foregroundColor(.primaryRed)

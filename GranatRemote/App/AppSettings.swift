@@ -163,6 +163,14 @@ enum L10n {
         "err.error":         "Error",
         "err.cmd":           "Command error",
 
+        // Object tabs
+        "obj.commands": "Commands",
+        "obj.events":   "Events",
+        "obj.schedule": "Schedule",
+
+        // Events camera button
+        "events.camera": "Camera",
+
         // Schedule
         "schedule.title":      "Schedule",
         "schedule.add":        "Add rule",
@@ -217,6 +225,11 @@ enum L10n {
         "btn.cancel": "Скасувати",
 
         "balance.title": "Баланс",
+
+        "obj.commands": "Команди",
+        "obj.events":   "Події",
+        "obj.schedule": "Розклад",
+        "events.camera": "Camera",
 
         "events.title": "Події",
         "events.none":  "Подій немає",
@@ -308,6 +321,11 @@ enum L10n {
 
         "balance.title": "Баланс",
 
+        "obj.commands": "Команды",
+        "obj.events":   "События",
+        "obj.schedule": "Расписание",
+        "events.camera": "Camera",
+
         "events.title": "События",
         "events.none":  "Событий нет",
 
@@ -375,6 +393,8 @@ enum L10n {
         "panel.cameras": "Cámaras", "panel.no_cameras": "Sin cámaras",
         "output.title": "Número de salida", "output.placeholder": "Número",
         "btn.ok": "OK", "btn.cancel": "Cancelar", "btn.save": "Guardar",
+        "obj.commands": "Comandos", "obj.events": "Eventos", "obj.schedule": "Horario",
+        "events.camera": "Camera",
         "balance.title": "Balance", "events.title": "Eventos", "events.none": "Sin eventos",
         "help.title": "Ayuda", "help.none": "Sin información.",
         "settings.title": "Ajustes", "settings.account": "Cuenta", "settings.login": "Usuario",
@@ -409,6 +429,8 @@ enum L10n {
         "panel.cameras": "Caméras", "panel.no_cameras": "Aucune caméra",
         "output.title": "Numéro de sortie", "output.placeholder": "Numéro",
         "btn.ok": "OK", "btn.cancel": "Annuler", "btn.save": "Sauvegarder",
+        "obj.commands": "Commandes", "obj.events": "Événements", "obj.schedule": "Horaire",
+        "events.camera": "Camera",
         "balance.title": "Solde", "events.title": "Événements", "events.none": "Aucun événement",
         "help.title": "Aide", "help.none": "Aucune information disponible.",
         "settings.title": "Paramètres", "settings.account": "Compte", "settings.login": "Identifiant",
@@ -443,6 +465,8 @@ enum L10n {
         "panel.cameras": "Kamery", "panel.no_cameras": "Brak kamer",
         "output.title": "Numer wyjścia", "output.placeholder": "Numer",
         "btn.ok": "OK", "btn.cancel": "Anuluj", "btn.save": "Zapisz",
+        "obj.commands": "Komendy", "obj.events": "Zdarzenia", "obj.schedule": "Harmonogram",
+        "events.camera": "Camera",
         "balance.title": "Saldo", "events.title": "Zdarzenia", "events.none": "Brak zdarzeń",
         "help.title": "Pomoc", "help.none": "Brak informacji.",
         "settings.title": "Ustawienia", "settings.account": "Konto", "settings.login": "Login",
@@ -477,6 +501,8 @@ enum L10n {
         "panel.cameras": "Камери", "panel.no_cameras": "Няма камери",
         "output.title": "Номер на изхода", "output.placeholder": "Номер",
         "btn.ok": "OK", "btn.cancel": "Отказ", "btn.save": "Запази",
+        "obj.commands": "Команди", "obj.events": "Събития", "obj.schedule": "Разписание",
+        "events.camera": "Camera",
         "balance.title": "Баланс", "events.title": "Събития", "events.none": "Няма събития",
         "help.title": "Помощ", "help.none": "Няма информация.",
         "settings.title": "Настройки", "settings.account": "Акаунт", "settings.login": "Логин",
@@ -511,6 +537,8 @@ enum L10n {
         "panel.cameras": "Camere", "panel.no_cameras": "Fără camere",
         "output.title": "Numărul ieșirii", "output.placeholder": "Număr",
         "btn.ok": "OK", "btn.cancel": "Anulează", "btn.save": "Salvează",
+        "obj.commands": "Comenzi", "obj.events": "Evenimente", "obj.schedule": "Program",
+        "events.camera": "Camera",
         "balance.title": "Sold", "events.title": "Evenimente", "events.none": "Fără evenimente",
         "help.title": "Ajutor", "help.none": "Fără informații.",
         "settings.title": "Setări", "settings.account": "Cont", "settings.login": "Utilizator",

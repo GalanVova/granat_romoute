@@ -43,7 +43,6 @@ class HomeViewModel: ObservableObject {
         guard let api else { return }
         do {
             try await api.remoteControl(cmd: cmd, panel: group.panelId, group: group.group, num: num)
-            // Refresh state immediately after command
             if let idx = groups.firstIndex(where: { $0.id == group.id }) {
                 if let newState = try? await api.getPanelState(panel: group.panelId, group: group.group) {
                     groups[idx].state = newState
@@ -64,11 +63,6 @@ struct HomeView: View {
     @EnvironmentObject var appSettings: AppSettings
     @StateObject private var vm = HomeViewModel()
     @State private var selectedGroup: PanelGroup?
-    @State private var showOutputSheet = false
-    @State private var pendingCmd: (PanelGroup, Int)?
-    @State private var outputNumText = "1"
-
-    private func s(_ k: String) -> String { appSettings.t(k) }
 
     var body: some View {
         ZStack {
@@ -78,31 +72,17 @@ struct HomeView: View {
             } else if let err = vm.error {
                 errorView(err)
             } else if let group = selectedGroup {
-                SingleGroupView(group: group, settings: appSettings) { cmd, num in
-                    if cmd == 43 || cmd == 44 {
-                        pendingCmd = (group, cmd)
-                        outputNumText = "1"
-                        showOutputSheet = true
-                    } else {
-                        Task { await vm.sendCommand(group: group, cmd: cmd) }
-                    }
-                } onBack: {
-                    selectedGroup = nil
-                }
+                SingleGroupView(
+                    group: group,
+                    settings: appSettings,
+                    vm: vm
+                ) { selectedGroup = nil }
             } else {
                 multiGroupView
             }
         }
         .task { await vm.load(api: appState.api, session: appState.session) }
         .onDisappear { vm.disconnect() }
-        .sheet(isPresented: $showOutputSheet) {
-            OutputNumberSheet(settings: appSettings, text: $outputNumText) { num in
-                if let (group, cmd) = pendingCmd {
-                    Task { await vm.sendCommand(group: group, cmd: cmd, num: num) }
-                }
-                showOutputSheet = false
-            } onCancel: { showOutputSheet = false }
-        }
     }
 
     private var multiGroupView: some View {
@@ -131,7 +111,7 @@ struct HomeView: View {
             }
 
             HStack {
-                Text(s("home.objects"))
+                Text(appSettings.t("home.objects"))
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.textPrimary)
                 Spacer()
@@ -155,14 +135,14 @@ struct HomeView: View {
 
     private func errorView(_ err: String) -> some View {
         VStack(spacing: 16) {
-            Text(s("home.connection_error"))
+            Text(appSettings.t("home.connection_error"))
                 .font(.headline)
                 .foregroundColor(.textPrimary)
             Text(err)
                 .font(.caption)
                 .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
-            Button(s("home.retry")) {
+            Button(appSettings.t("home.retry")) {
                 Task { await vm.load(api: appState.api, session: appState.session) }
             }
             .padding(.horizontal, 24)
@@ -300,13 +280,21 @@ struct PanelGroupCard: View {
     }
 }
 
-// MARK: - Single group commands grid
+// MARK: - Single group view with tabs
 
 struct SingleGroupView: View {
     let group: PanelGroup
     let settings: AppSettings
-    let onCommand: (Int, Int) -> Void
+    let vm: HomeViewModel
     let onBack: () -> Void
+
+    @EnvironmentObject var appState: AppState
+    @State private var activeTab: ObjTab = .commands
+    @State private var showOutputSheet = false
+    @State private var pendingCmd = 0
+    @State private var outputNumText = "1"
+
+    enum ObjTab { case commands, events, schedule }
 
     private func s(_ k: String) -> String { settings.t(k) }
 
@@ -347,10 +335,6 @@ struct SingleGroupView: View {
                         .foregroundColor(.textPrimary)
                 }
                 Spacer()
-                ZStack(alignment: .topTrailing) {
-                    Image(systemName: "bell").font(.system(size: 20)).foregroundColor(.textPrimary)
-                    Circle().fill(Color.primaryRed).frame(width: 8, height: 8).offset(x: 2, y: -2)
-                }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
@@ -418,23 +402,257 @@ struct SingleGroupView: View {
             .cornerRadius(12)
             .padding(.horizontal, 16)
 
-            // Commands grid + cameras
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    ForEach(commands, id: \.2) { (icon, label, cmd) in
-                        CommandGridButton(icon: icon, label: label) { onCommand(cmd, 0) }
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-
-                PanelCamerasSection(panelGroupId: group.id)
-                    .environmentObject(settings)
-                    .padding(.top, 4)
+            // Tab strip
+            HStack(spacing: 0) {
+                objTabButton(.commands, icon: "square.grid.2x2", label: s("obj.commands"))
+                objTabButton(.events,   icon: "bell",           label: s("obj.events"))
+                objTabButton(.schedule, icon: "clock",          label: s("obj.schedule"))
             }
+            .padding(.top, 12)
+            .padding(.horizontal, 16)
+
+            Divider().background(Color.inputBorder).padding(.top, 0)
+
+            // Content
+            Group {
+                switch activeTab {
+                case .commands:
+                    ScrollView {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                            ForEach(commands, id: \.2) { (icon, label, cmd) in
+                                CommandGridButton(icon: icon, label: label) {
+                                    handleCommand(cmd)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+
+                        PanelCamerasSection(panelGroupId: group.id)
+                            .environmentObject(settings)
+                            .padding(.top, 4)
+                    }
+                case .events:
+                    ObjectEventsView(group: group, settings: settings)
+                case .schedule:
+                    ObjectScheduleView(group: group, settings: settings)
+                }
+            }
+        }
+        .sheet(isPresented: $showOutputSheet) {
+            OutputNumberSheet(settings: settings, text: $outputNumText) { num in
+                Task { await vm.sendCommand(group: group, cmd: pendingCmd, num: num) }
+                showOutputSheet = false
+            } onCancel: { showOutputSheet = false }
+        }
+    }
+
+    @ViewBuilder
+    private func objTabButton(_ tab: ObjTab, icon: String, label: String) -> some View {
+        let selected = activeTab == tab
+        Button { activeTab = tab } label: {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 16))
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .foregroundColor(selected ? .primaryRed : .textSecondary)
+            .overlay(alignment: .bottom) {
+                if selected {
+                    Rectangle()
+                        .fill(Color.primaryRed)
+                        .frame(height: 2)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func handleCommand(_ cmd: Int) {
+        if cmd == 43 || cmd == 44 {
+            pendingCmd = cmd
+            outputNumText = "1"
+            showOutputSheet = true
+        } else {
+            Task { await vm.sendCommand(group: group, cmd: cmd) }
         }
     }
 }
+
+// MARK: - Per-object Events
+
+struct ObjectEventsView: View {
+    let group: PanelGroup
+    let settings: AppSettings
+    @EnvironmentObject var appState: AppState
+    @ObservedObject private var cameraStore = CameraStore.shared
+    @State private var events: [PanelEvent] = []
+    @State private var isLoading = true
+    @State private var loadError: String?
+    @State private var selectedCamera: Camera?
+
+    private func s(_ k: String) -> String { settings.t(k) }
+    private var cameras: [Camera] { cameraStore.cameras(for: group.id) }
+
+    var body: some View {
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            if isLoading {
+                ProgressView().tint(.textSecondary)
+            } else if let err = loadError {
+                Text(err)
+                    .font(.system(size: 14))
+                    .foregroundColor(.textSecondary)
+                    .padding()
+            } else if events.isEmpty {
+                Text(s("events.none"))
+                    .font(.system(size: 15))
+                    .foregroundColor(.textSecondary)
+            } else {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        ForEach(events) { event in
+                            HStack(alignment: .top, spacing: 12) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(event.text)
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.textPrimary)
+                                    if !event.time.isEmpty {
+                                        Text(event.time)
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.textSecondary)
+                                    }
+                                }
+                                Spacer()
+                                if !cameras.isEmpty {
+                                    Button {
+                                        selectedCamera = cameras.first
+                                    } label: {
+                                        VStack(spacing: 2) {
+                                            Image(systemName: "video.fill")
+                                                .font(.system(size: 14))
+                                            Text(s("events.camera"))
+                                                .font(.system(size: 10))
+                                        }
+                                        .foregroundColor(.primaryRed)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 6)
+                                        .background(Color.primaryRed.opacity(0.1))
+                                        .cornerRadius(8)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            Divider()
+                                .background(Color.inputBorder)
+                                .padding(.leading, 16)
+                        }
+                    }
+                }
+            }
+        }
+        .navigationDestination(isPresented: Binding(
+            get: { selectedCamera != nil },
+            set: { if !$0 { selectedCamera = nil } }
+        )) {
+            if let cam = selectedCamera { CameraPlayerView(camera: cam) }
+        }
+        .task { await loadEvents() }
+    }
+
+    private func loadEvents() async {
+        isLoading = true
+        loadError = nil
+        do {
+            let all = (try await appState.api?.getEvents()) ?? []
+            let filtered = all.filter { e in
+                (e.panelId.isEmpty || e.panelId == group.panelId) &&
+                (e.group == 0 || e.group == group.group)
+            }
+            events = filtered.isEmpty ? all : filtered
+        } catch {
+            loadError = error.localizedDescription
+        }
+        isLoading = false
+    }
+}
+
+// MARK: - Per-object Schedule
+
+struct ObjectScheduleView: View {
+    let group: PanelGroup
+    let settings: AppSettings
+    @ObservedObject private var store = ScheduleStore.shared
+    @State private var showAdd = false
+    @State private var editing: ScheduleRule?
+
+    private func s(_ k: String) -> String { settings.t(k) }
+    private var rules: [ScheduleRule] { store.rules.filter { $0.panelGroupId == group.id } }
+
+    var body: some View {
+        ZStack {
+            Color.appBackground.ignoresSafeArea()
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text(s("schedule.title"))
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.textPrimary)
+                    Spacer()
+                    Button { showAdd = true } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.primaryRed)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
+
+                if rules.isEmpty {
+                    Spacer()
+                    Text(s("schedule.none"))
+                        .font(.system(size: 15))
+                        .foregroundColor(.textSecondary)
+                        .frame(maxWidth: .infinity)
+                    Spacer()
+                } else {
+                    ScrollView {
+                        VStack(spacing: 10) {
+                            ForEach(rules) { rule in
+                                ScheduleRuleCard(rule: rule, settings: settings) {
+                                    editing = rule
+                                } onDelete: {
+                                    store.delete(id: rule.id)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 16)
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showAdd) {
+            ScheduleEditSheet(settings: settings, existing: nil, panelGroupId: group.id) { rule in
+                store.add(rule)
+                showAdd = false
+            } onCancel: { showAdd = false }
+        }
+        .sheet(item: $editing) { rule in
+            ScheduleEditSheet(settings: settings, existing: rule, panelGroupId: rule.panelGroupId) { updated in
+                store.update(updated)
+                editing = nil
+            } onCancel: { editing = nil }
+        }
+    }
+}
+
+// MARK: - Command grid button
 
 struct CommandGridButton: View {
     let icon: String
