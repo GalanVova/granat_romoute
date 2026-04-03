@@ -7,14 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		03478A59646D8B686FC2BB69 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BB04358934A49C2D2F14063 /* AppDelegate.swift */; };
+		1F4469121AE3885764FA5B20 /* ScheduleExecutor.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF770332AAB58E00222EF418 /* ScheduleExecutor.swift */; };
+		1F6AA1C7CD8C2E10846969CC /* ScheduleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C69214408CA7151B6C7296C4 /* ScheduleView.swift */; };
 		2DBE9E72D12C02A5BB1547C8 /* GranatRemoteApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 210F2F9F7D5E945ACDF72F61 /* GranatRemoteApp.swift */; };
 		2E0EE623119006CB610366F3 /* ColorExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 884B538D6C0A25E53262E1C0 /* ColorExtension.swift */; };
+		31E825DB2C75F488E3C63880 /* CameraPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 534E51C666AAFF678685E0FC /* CameraPlayerView.swift */; };
+		477702E0ED50A1B46BC5A4D2 /* BackgroundScheduleRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C693FDB53C7328C2C87E93E /* BackgroundScheduleRunner.swift */; };
 		4BDE07D8D371B7B606C760F6 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D55F25075832CD0F35F512C /* WelcomeView.swift */; };
 		4DE2440A6DBFD1BFC36E1CE2 /* CountrySelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7139C955826AC2B5F211189 /* CountrySelectView.swift */; };
 		52E57367F552662C025A38B1 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78AB229FCC3EA91B742AB223 /* Session.swift */; };
 		558B81211B2753F1EC0F9D07 /* PanelState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D94BABCEA7608C330A9526E8 /* PanelState.swift */; };
+		5C75538C4AEEA4B555D59627 /* ScheduleNotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67E2ADB5DE21D93480EBC603 /* ScheduleNotificationManager.swift */; };
 		68223F8288088A9205FC708A /* WampV1Client.swift in Sources */ = {isa = PBXBuildFile; fileRef = 441E174F3CFCC5DFD01C2A1A /* WampV1Client.swift */; };
+		77016BEDF76D817C4B9B6901 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9869866BE731748C087221C /* AppSettings.swift */; };
 		90E8EDA028945C284E2223F3 /* PCNSelectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8396FCEACEBDBDF13D298C70 /* PCNSelectView.swift */; };
+		940714357CD067D7B482CE4C /* ScheduleRule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8B43263E8AF7647B5A494DC5 /* ScheduleRule.swift */; };
 		97EC339BEBFA374C33E98FF0 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAFDBA699A0207511F2EBC36 /* SplashView.swift */; };
 		98EA6735C3788944DB12890A /* LunAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = 347D75D8E98C5FBADFF0EC3F /* LunAPI.swift */; };
 		9A14F1D5D2B85B55D3EB421C /* ShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42BE897214133A80F593C3B3 /* ShellView.swift */; };
@@ -24,32 +32,44 @@
 		BDF0627054CDD5E6D16EBE9E /* DemoData.swift in Sources */ = {isa = PBXBuildFile; fileRef = C034663422093EF157EA209F /* DemoData.swift */; };
 		CAFF04B70761ED01005647DF /* PanelGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19725F02A2C416BE6B333E73 /* PanelGroup.swift */; };
 		D58BD95D75C24C1C5BB1E4CA /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B64527090E27144AEE5F6445 /* AppState.swift */; };
+		E70BAF6FD8B9F83D1132322B /* Camera.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6350012CF2A62B402887135F /* Camera.swift */; };
+		EC3F41815768CD3473D3F0E2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 077AA4057B7BD4FB8EF434CF /* SettingsView.swift */; };
 		F11BDC1962F164BD9FE13976 /* PCN.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD05682B51A58344A853B0D1 /* PCN.swift */; };
 		FD55BC1EDD987533D828DC17 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BE165F3AC706D199F784A40 /* HomeView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		06335ADB53BBAAA5CEAE53C4 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		077AA4057B7BD4FB8EF434CF /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		0C693FDB53C7328C2C87E93E /* BackgroundScheduleRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundScheduleRunner.swift; sourceTree = "<group>"; };
 		19725F02A2C416BE6B333E73 /* PanelGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelGroup.swift; sourceTree = "<group>"; };
 		210F2F9F7D5E945ACDF72F61 /* GranatRemoteApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GranatRemoteApp.swift; sourceTree = "<group>"; };
 		347D75D8E98C5FBADFF0EC3F /* LunAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LunAPI.swift; sourceTree = "<group>"; };
 		42BE897214133A80F593C3B3 /* ShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellView.swift; sourceTree = "<group>"; };
 		436C31422A1A765583BE21CF /* GranatRemote.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GranatRemote.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		441E174F3CFCC5DFD01C2A1A /* WampV1Client.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WampV1Client.swift; sourceTree = "<group>"; };
+		534E51C666AAFF678685E0FC /* CameraPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraPlayerView.swift; sourceTree = "<group>"; };
+		6350012CF2A62B402887135F /* Camera.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Camera.swift; sourceTree = "<group>"; };
+		67E2ADB5DE21D93480EBC603 /* ScheduleNotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleNotificationManager.swift; sourceTree = "<group>"; };
+		6BB04358934A49C2D2F14063 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		6D4C3625A3DF27DD095B10D2 /* Country.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Country.swift; sourceTree = "<group>"; };
 		6D55F25075832CD0F35F512C /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		78AB229FCC3EA91B742AB223 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		8396FCEACEBDBDF13D298C70 /* PCNSelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCNSelectView.swift; sourceTree = "<group>"; };
 		884B538D6C0A25E53262E1C0 /* ColorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtension.swift; sourceTree = "<group>"; };
+		8B43263E8AF7647B5A494DC5 /* ScheduleRule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleRule.swift; sourceTree = "<group>"; };
 		9BE165F3AC706D199F784A40 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		AAFDBA699A0207511F2EBC36 /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		B523E9CD5BCD58F0723D1801 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B64527090E27144AEE5F6445 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		C034663422093EF157EA209F /* DemoData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoData.swift; sourceTree = "<group>"; };
+		C69214408CA7151B6C7296C4 /* ScheduleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleView.swift; sourceTree = "<group>"; };
+		C9869866BE731748C087221C /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		D7139C955826AC2B5F211189 /* CountrySelectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountrySelectView.swift; sourceTree = "<group>"; };
 		D94BABCEA7608C330A9526E8 /* PanelState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelState.swift; sourceTree = "<group>"; };
 		DFD7991FABF33CD3A04C9156 /* RecoverPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecoverPasswordView.swift; sourceTree = "<group>"; };
 		FD05682B51A58344A853B0D1 /* PCN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PCN.swift; sourceTree = "<group>"; };
+		FF770332AAB58E00222EF418 /* ScheduleExecutor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScheduleExecutor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -85,6 +105,8 @@
 		76F023A3F266D7A4EDE09802 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				6BB04358934A49C2D2F14063 /* AppDelegate.swift */,
+				C9869866BE731748C087221C /* AppSettings.swift */,
 				B64527090E27144AEE5F6445 /* AppState.swift */,
 				210F2F9F7D5E945ACDF72F61 /* GranatRemoteApp.swift */,
 			);
@@ -102,7 +124,10 @@
 		B52A74BF1A3D9B6B4F017165 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				0C693FDB53C7328C2C87E93E /* BackgroundScheduleRunner.swift */,
 				347D75D8E98C5FBADFF0EC3F /* LunAPI.swift */,
+				FF770332AAB58E00222EF418 /* ScheduleExecutor.swift */,
+				67E2ADB5DE21D93480EBC603 /* ScheduleNotificationManager.swift */,
 				441E174F3CFCC5DFD01C2A1A /* WampV1Client.swift */,
 			);
 			path = Services;
@@ -111,12 +136,15 @@
 		B56510D9D950ADC9BE39BADF /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				534E51C666AAFF678685E0FC /* CameraPlayerView.swift */,
 				884B538D6C0A25E53262E1C0 /* ColorExtension.swift */,
 				D7139C955826AC2B5F211189 /* CountrySelectView.swift */,
 				9BE165F3AC706D199F784A40 /* HomeView.swift */,
 				06335ADB53BBAAA5CEAE53C4 /* LoginView.swift */,
 				8396FCEACEBDBDF13D298C70 /* PCNSelectView.swift */,
 				DFD7991FABF33CD3A04C9156 /* RecoverPasswordView.swift */,
+				C69214408CA7151B6C7296C4 /* ScheduleView.swift */,
+				077AA4057B7BD4FB8EF434CF /* SettingsView.swift */,
 				42BE897214133A80F593C3B3 /* ShellView.swift */,
 				AAFDBA699A0207511F2EBC36 /* SplashView.swift */,
 				6D55F25075832CD0F35F512C /* WelcomeView.swift */,
@@ -135,10 +163,12 @@
 		F7D7C06DA66957F33333DDE7 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				6350012CF2A62B402887135F /* Camera.swift */,
 				6D4C3625A3DF27DD095B10D2 /* Country.swift */,
 				19725F02A2C416BE6B333E73 /* PanelGroup.swift */,
 				D94BABCEA7608C330A9526E8 /* PanelState.swift */,
 				FD05682B51A58344A853B0D1 /* PCN.swift */,
+				8B43263E8AF7647B5A494DC5 /* ScheduleRule.swift */,
 				78AB229FCC3EA91B742AB223 /* Session.swift */,
 			);
 			path = Models;
@@ -202,7 +232,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				03478A59646D8B686FC2BB69 /* AppDelegate.swift in Sources */,
+				77016BEDF76D817C4B9B6901 /* AppSettings.swift in Sources */,
 				D58BD95D75C24C1C5BB1E4CA /* AppState.swift in Sources */,
+				477702E0ED50A1B46BC5A4D2 /* BackgroundScheduleRunner.swift in Sources */,
+				E70BAF6FD8B9F83D1132322B /* Camera.swift in Sources */,
+				31E825DB2C75F488E3C63880 /* CameraPlayerView.swift in Sources */,
 				2E0EE623119006CB610366F3 /* ColorExtension.swift in Sources */,
 				AD31EB2E9BEFA2BDE35A3C18 /* Country.swift in Sources */,
 				4DE2440A6DBFD1BFC36E1CE2 /* CountrySelectView.swift in Sources */,
@@ -216,7 +251,12 @@
 				CAFF04B70761ED01005647DF /* PanelGroup.swift in Sources */,
 				558B81211B2753F1EC0F9D07 /* PanelState.swift in Sources */,
 				A038B02C6D4E9DEF054082CE /* RecoverPasswordView.swift in Sources */,
+				1F4469121AE3885764FA5B20 /* ScheduleExecutor.swift in Sources */,
+				5C75538C4AEEA4B555D59627 /* ScheduleNotificationManager.swift in Sources */,
+				940714357CD067D7B482CE4C /* ScheduleRule.swift in Sources */,
+				1F6AA1C7CD8C2E10846969CC /* ScheduleView.swift in Sources */,
 				52E57367F552662C025A38B1 /* Session.swift in Sources */,
+				EC3F41815768CD3473D3F0E2 /* SettingsView.swift in Sources */,
 				9A14F1D5D2B85B55D3EB421C /* ShellView.swift in Sources */,
 				97EC339BEBFA374C33E98FF0 /* SplashView.swift in Sources */,
 				68223F8288088A9205FC708A /* WampV1Client.swift in Sources */,

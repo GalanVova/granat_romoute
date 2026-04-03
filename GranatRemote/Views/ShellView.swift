@@ -1,5 +1,7 @@
 import SwiftUI
 
+// MARK: - Shell connection VM
+
 @MainActor
 class ShellViewModel: ObservableObject {
     private var client: WampV1Client?
@@ -24,6 +26,7 @@ class ShellViewModel: ObservableObject {
 
 struct ShellView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var appSettings: AppSettings
     @StateObject private var shellVM = ShellViewModel()
     @State private var selectedTab: Int = {
         let args = ProcessInfo.processInfo.arguments
@@ -33,23 +36,28 @@ struct ShellView: View {
         return 0
     }()
 
+    private func s(_ key: String) -> String { appSettings.t(key) }
+
     var body: some View {
         ZStack {
             Color.appBackground.ignoresSafeArea()
             if let api = appState.api {
                 TabView(selection: $selectedTab) {
                     HomeView()
-                        .tabItem { Label("Home",    systemImage: "house.fill") }
+                        .tabItem { Label(s("tab.home"),     systemImage: "house.fill") }
                         .tag(0)
                     NotificationsView()
-                        .tabItem { Label("Events",  systemImage: "bell.fill") }
+                        .tabItem { Label(s("tab.events"),   systemImage: "bell.fill") }
                         .tag(1)
                     BalanceView()
-                        .tabItem { Label("Balance", systemImage: "creditcard.fill") }
+                        .tabItem { Label(s("tab.balance"),  systemImage: "creditcard.fill") }
                         .tag(2)
                     HelpView()
-                        .tabItem { Label("Help",    systemImage: "questionmark.circle.fill") }
+                        .tabItem { Label(s("tab.help"),     systemImage: "questionmark.circle.fill") }
                         .tag(3)
+                    SettingsView()
+                        .tabItem { Label(s("tab.settings"), systemImage: "gearshape.fill") }
+                        .tag(4)
                 }
                 .tint(Color.primaryRed)
                 .id(ObjectIdentifier(api))
@@ -91,7 +99,9 @@ class BalanceViewModel: ObservableObject {
 
 struct BalanceView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var appSettings: AppSettings
     @StateObject private var vm = BalanceViewModel()
+    private func s(_ k: String) -> String { appSettings.t(k) }
 
     var body: some View {
         ZStack {
@@ -100,7 +110,7 @@ struct BalanceView: View {
                 ProgressView().tint(.textSecondary)
             } else if let err = vm.error {
                 VStack(spacing: 12) {
-                    Text("Error")
+                    Text(s("err.error"))
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.textPrimary)
                     Text(err)
@@ -112,7 +122,7 @@ struct BalanceView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("Balance")
+                        Text(s("balance.title"))
                             .font(.system(size: 22, weight: .semibold))
                             .foregroundColor(.textPrimary)
                             .padding(.horizontal, 20)
@@ -121,7 +131,6 @@ struct BalanceView: View {
                         let lines = vm.balance.isEmpty ? ["—"] : vm.balance.components(separatedBy: "\n")
                         ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
                             HStack {
-                                // parse "sum (cn)" format
                                 let parts = line.components(separatedBy: " (")
                                 VStack(alignment: .leading, spacing: 4) {
                                     if parts.count == 2 {
@@ -178,7 +187,9 @@ class HelpViewModel: ObservableObject {
 
 struct HelpView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var appSettings: AppSettings
     @StateObject private var vm = HelpViewModel()
+    private func s(_ k: String) -> String { appSettings.t(k) }
 
     var body: some View {
         ZStack {
@@ -187,7 +198,7 @@ struct HelpView: View {
                 ProgressView().tint(.textSecondary)
             } else if let err = vm.error {
                 VStack(spacing: 12) {
-                    Text("Error")
+                    Text(s("err.error"))
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.textPrimary)
                     Text(err)
@@ -199,13 +210,13 @@ struct HelpView: View {
             } else {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("Help")
+                        Text(s("help.title"))
                             .font(.system(size: 22, weight: .semibold))
                             .foregroundColor(.textPrimary)
                             .padding(.horizontal, 20)
                             .padding(.top, 20)
                             .padding(.bottom, 16)
-                        Text(vm.text.isEmpty ? "No help information available." : vm.text)
+                        Text(vm.text.isEmpty ? s("help.none") : vm.text)
                             .font(.system(size: 15))
                             .foregroundColor(.textPrimary)
                             .lineSpacing(4)
@@ -243,7 +254,9 @@ class NotificationsViewModel: ObservableObject {
 
 struct NotificationsView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var appSettings: AppSettings
     @StateObject private var vm = NotificationsViewModel()
+    private func s(_ k: String) -> String { appSettings.t(k) }
 
     var body: some View {
         ZStack {
@@ -252,7 +265,7 @@ struct NotificationsView: View {
                 ProgressView().tint(.textSecondary)
             } else if let err = vm.error {
                 VStack(spacing: 12) {
-                    Text("Error")
+                    Text(s("err.error"))
                         .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.textPrimary)
                     Text(err)
@@ -262,13 +275,13 @@ struct NotificationsView: View {
                         .padding(.horizontal, 24)
                 }
             } else if vm.events.isEmpty {
-                Text("No events")
+                Text(s("events.none"))
                     .foregroundColor(.textSecondary)
             } else {
                 ScrollView {
                     VStack(spacing: 0) {
                         HStack {
-                            Text("Events")
+                            Text(s("events.title"))
                                 .font(.system(size: 22, weight: .semibold))
                                 .foregroundColor(.textPrimary)
                             Spacer()

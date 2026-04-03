@@ -91,6 +91,7 @@ struct LoginView: View {
         guard let pcn else { error = "Monitoring center is not selected."; return }
         error = nil
         appState.setSession(Session(host: pcn.host, port: pcn.port, login: login, password: password))
+        appState.saveCredentials()
         appState.navigate(to: .shell)
     }
 }

@@ -43,6 +43,12 @@ class HomeViewModel: ObservableObject {
         guard let api else { return }
         do {
             try await api.remoteControl(cmd: cmd, panel: group.panelId, group: group.group, num: num)
+            // Refresh state immediately after command
+            if let idx = groups.firstIndex(where: { $0.id == group.id }) {
+                if let newState = try? await api.getPanelState(panel: group.panelId, group: group.group) {
+                    groups[idx].state = newState
+                }
+            }
         } catch {
             self.error = "Command error: \(error.localizedDescription)"
         }
@@ -51,14 +57,18 @@ class HomeViewModel: ObservableObject {
     func disconnect() { }
 }
 
-// MARK: - Shell / Home entry point
+// MARK: - Home entry point
+
 struct HomeView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var appSettings: AppSettings
     @StateObject private var vm = HomeViewModel()
     @State private var selectedGroup: PanelGroup?
     @State private var showOutputSheet = false
     @State private var pendingCmd: (PanelGroup, Int)?
     @State private var outputNumText = "1"
+
+    private func s(_ k: String) -> String { appSettings.t(k) }
 
     var body: some View {
         ZStack {
@@ -68,7 +78,7 @@ struct HomeView: View {
             } else if let err = vm.error {
                 errorView(err)
             } else if let group = selectedGroup {
-                SingleGroupView(group: group) { cmd, num in
+                SingleGroupView(group: group, settings: appSettings) { cmd, num in
                     if cmd == 43 || cmd == 44 {
                         pendingCmd = (group, cmd)
                         outputNumText = "1"
@@ -86,7 +96,7 @@ struct HomeView: View {
         .task { await vm.load(api: appState.api, session: appState.session) }
         .onDisappear { vm.disconnect() }
         .sheet(isPresented: $showOutputSheet) {
-            OutputNumberSheet(text: $outputNumText) { num in
+            OutputNumberSheet(settings: appSettings, text: $outputNumText) { num in
                 if let (group, cmd) = pendingCmd {
                     Task { await vm.sendCommand(group: group, cmd: cmd, num: num) }
                 }
@@ -97,7 +107,6 @@ struct HomeView: View {
 
     private var multiGroupView: some View {
         VStack(spacing: 0) {
-            // Top bar
             HStack {
                 Image(systemName: "square.grid.2x2")
                     .font(.system(size: 20))
@@ -107,28 +116,22 @@ struct HomeView: View {
                     Image(systemName: "bell")
                         .font(.system(size: 20))
                         .foregroundColor(.textPrimary)
-                    Circle()
-                        .fill(Color.primaryRed)
-                        .frame(width: 8, height: 8)
-                        .offset(x: 2, y: -2)
+                    Circle().fill(Color.primaryRed).frame(width: 8, height: 8).offset(x: 2, y: -2)
                 }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
 
-            // PCN selector strip
             if let pcn = appState.pcn {
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 16) {
-                        PCNChip(name: pcn.name, selected: true)
-                    }
-                    .padding(.horizontal, 20)
+                    HStack(spacing: 16) { PCNChip(name: pcn.name, selected: true) }
+                        .padding(.horizontal, 20)
                 }
                 .padding(.bottom, 8)
             }
 
             HStack {
-                Text("Your objects")
+                Text(s("home.objects"))
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.textPrimary)
                 Spacer()
@@ -139,7 +142,7 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 10) {
                     ForEach(vm.groups) { group in
-                        PanelGroupCard(group: group) {
+                        PanelGroupCard(group: group, settings: appSettings) {
                             selectedGroup = group
                         }
                     }
@@ -152,14 +155,14 @@ struct HomeView: View {
 
     private func errorView(_ err: String) -> some View {
         VStack(spacing: 16) {
-            Text("Connection error")
+            Text(s("home.connection_error"))
                 .font(.headline)
                 .foregroundColor(.textPrimary)
             Text(err)
                 .font(.caption)
                 .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
-            Button("Try again") {
+            Button(s("home.retry")) {
                 Task { await vm.load(api: appState.api, session: appState.session) }
             }
             .padding(.horizontal, 24)
@@ -173,23 +176,17 @@ struct HomeView: View {
 }
 
 // MARK: - PCN chip
+
 struct PCNChip: View {
     let name: String
     let selected: Bool
     var body: some View {
         HStack(spacing: 8) {
             ZStack {
-                Circle()
-                    .fill(Color.inputBackground)
-                    .frame(width: 28, height: 28)
-                Image(systemName: "s.circle.fill")
-                    .font(.system(size: 16))
-                    .foregroundColor(.textSecondary)
+                Circle().fill(Color.inputBackground).frame(width: 28, height: 28)
+                Image(systemName: "s.circle.fill").font(.system(size: 16)).foregroundColor(.textSecondary)
             }
-            Text(name)
-                .font(.system(size: 13))
-                .foregroundColor(.textPrimary)
-                .lineLimit(1)
+            Text(name).font(.system(size: 13)).foregroundColor(.textPrimary).lineLimit(1)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -199,9 +196,13 @@ struct PCNChip: View {
 }
 
 // MARK: - Panel group card (list view)
+
 struct PanelGroupCard: View {
     let group: PanelGroup
+    let settings: AppSettings
     let onTap: () -> Void
+
+    private func s(_ k: String) -> String { settings.t(k) }
 
     private var armColor: Color {
         guard let state = group.state else { return .textSecondary }
@@ -212,10 +213,18 @@ struct PanelGroupCard: View {
         }
     }
 
+    private func armLabel(_ mode: Int) -> String {
+        switch mode {
+        case 0: return s("arm.disarmed")
+        case 1: return s("arm.armed")
+        case 2: return s("arm.home")
+        default: return s("arm.unknown")
+        }
+    }
+
     var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 8) {
-                // Header row
                 HStack {
                     Text("# \(group.panelId)/\(group.group)")
                         .font(.system(size: 12, weight: .medium))
@@ -225,30 +234,18 @@ struct PanelGroupCard: View {
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.textSecondary)
                 }
-
-                // Name
                 Text(group.name)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.textPrimary)
                     .lineLimit(2)
                     .multilineTextAlignment(.leading)
-
-                // Address
                 if let addr = group.address {
                     HStack(spacing: 4) {
-                        Image(systemName: "mappin")
-                            .font(.system(size: 11))
-                            .foregroundColor(.textSecondary)
-                        Text(addr)
-                            .font(.system(size: 12))
-                            .foregroundColor(.textSecondary)
-                            .lineLimit(1)
+                        Image(systemName: "mappin").font(.system(size: 11)).foregroundColor(.textSecondary)
+                        Text(addr).font(.system(size: 12)).foregroundColor(.textSecondary).lineLimit(1)
                     }
                 }
-
                 Divider().background(Color.inputBorder)
-
-                // Status row: icons + arm badge
                 HStack(spacing: 0) {
                     statusIconsRow
                     Spacer()
@@ -272,12 +269,8 @@ struct PanelGroupCard: View {
                     .foregroundColor(state.hasMainPower ? .selectedGreen : .textSecondary)
                 Image(systemName: "battery.100")
                     .foregroundColor(state.hasBattery ? .selectedGreen : .textSecondary)
-                if state.hasWifi {
-                    Image(systemName: "wifi").foregroundColor(.selectedGreen)
-                }
-                if state.hasCamera {
-                    Image(systemName: "video").foregroundColor(.selectedGreen)
-                }
+                if state.hasWifi { Image(systemName: "wifi").foregroundColor(.selectedGreen) }
+                if state.hasCamera { Image(systemName: "video").foregroundColor(.selectedGreen) }
             } else {
                 Image(systemName: "antenna.radiowaves.left.and.right").foregroundColor(.textSecondary)
                 Image(systemName: "bolt").foregroundColor(.textSecondary)
@@ -293,7 +286,7 @@ struct PanelGroupCard: View {
             HStack(spacing: 4) {
                 Image(systemName: state.armMode == 1 ? "lock.fill" : (state.armMode == 2 ? "house.fill" : "lock.open.fill"))
                     .font(.system(size: 11, weight: .semibold))
-                Text(state.armLabel)
+                Text(armLabel(state.armMode))
                     .font(.system(size: 12, weight: .semibold))
             }
             .foregroundColor(armColor)
@@ -308,10 +301,14 @@ struct PanelGroupCard: View {
 }
 
 // MARK: - Single group commands grid
+
 struct SingleGroupView: View {
     let group: PanelGroup
+    let settings: AppSettings
     let onCommand: (Int, Int) -> Void
     let onBack: () -> Void
+
+    private func s(_ k: String) -> String { settings.t(k) }
 
     private var armColor: Color {
         guard let state = group.state else { return .textSecondary }
@@ -322,14 +319,23 @@ struct SingleGroupView: View {
         }
     }
 
-    let commands: [(String, String, Int)] = [
-        ("house.fill",               "Arm stay\nat home",    55),
-        ("lock.open.fill",           "Disarm",              53),
-        ("lock.fill",                "Arm",                 52),
-        ("sos",                      "SOS\nAlarm",          54),
-        ("power",                    "Toggle\noutput",      43),
-        ("arrow.up.right.square",    "Output\nstatus",      44),
-    ]
+    private func armLabel(_ mode: Int) -> String {
+        switch mode {
+        case 0: return s("arm.disarmed")
+        case 1: return s("arm.armed")
+        case 2: return s("arm.home")
+        default: return s("arm.unknown")
+        }
+    }
+
+    private var commands: [(String, String, Int)] {[
+        ("house.fill",            s("cmd.arm_stay"),   55),
+        ("lock.open.fill",        s("cmd.disarm"),     53),
+        ("lock.fill",             s("cmd.arm"),        52),
+        ("sos",                   s("cmd.sos"),        54),
+        ("power",                 s("cmd.output"),     43),
+        ("arrow.up.right.square", s("cmd.out_status"), 44),
+    ]}
 
     var body: some View {
         VStack(spacing: 0) {
@@ -342,9 +348,7 @@ struct SingleGroupView: View {
                 }
                 Spacer()
                 ZStack(alignment: .topTrailing) {
-                    Image(systemName: "bell")
-                        .font(.system(size: 20))
-                        .foregroundColor(.textPrimary)
+                    Image(systemName: "bell").font(.system(size: 20)).foregroundColor(.textPrimary)
                     Circle().fill(Color.primaryRed).frame(width: 8, height: 8).offset(x: 2, y: -2)
                 }
             }
@@ -368,10 +372,7 @@ struct SingleGroupView: View {
                         Text(addr).font(.system(size: 12)).foregroundColor(.textSecondary).lineLimit(1)
                     }
                 }
-
                 Divider().background(Color.inputBorder)
-
-                // Status icons + arm badge
                 HStack(spacing: 0) {
                     if let state = group.state {
                         HStack(spacing: 12) {
@@ -381,12 +382,8 @@ struct SingleGroupView: View {
                                 .foregroundColor(state.hasMainPower ? .selectedGreen : .textSecondary)
                             Image(systemName: "battery.100")
                                 .foregroundColor(state.hasBattery ? .selectedGreen : .textSecondary)
-                            if state.hasWifi {
-                                Image(systemName: "wifi").foregroundColor(.selectedGreen)
-                            }
-                            if state.hasCamera {
-                                Image(systemName: "video").foregroundColor(.selectedGreen)
-                            }
+                            if state.hasWifi { Image(systemName: "wifi").foregroundColor(.selectedGreen) }
+                            if state.hasCamera { Image(systemName: "video").foregroundColor(.selectedGreen) }
                         }
                         .font(.system(size: 15))
                     } else {
@@ -398,15 +395,12 @@ struct SingleGroupView: View {
                         .font(.system(size: 15))
                         .foregroundColor(.textSecondary)
                     }
-
                     Spacer()
-
-                    // Arm status badge
                     if let state = group.state {
                         HStack(spacing: 5) {
                             Image(systemName: state.armMode == 1 ? "lock.fill" : (state.armMode == 2 ? "house.fill" : "lock.open.fill"))
                                 .font(.system(size: 12, weight: .semibold))
-                            Text(state.armLabel)
+                            Text(armLabel(state.armMode))
                                 .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundColor(armColor)
@@ -424,17 +418,21 @@ struct SingleGroupView: View {
             .cornerRadius(12)
             .padding(.horizontal, 16)
 
-            // Commands grid
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    ForEach(commands, id: \.2) { (icon, label, cmd) in
-                        CommandGridButton(icon: icon, label: label) {
-                            onCommand(cmd, 0)
+            // Commands grid + cameras
+            NavigationStack {
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                        ForEach(commands, id: \.2) { (icon, label, cmd) in
+                            CommandGridButton(icon: icon, label: label) { onCommand(cmd, 0) }
                         }
                     }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 16)
+
+                    PanelCamerasSection(panelGroupId: group.id)
+                        .environmentObject(settings)
+                        .padding(.top, 4)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
             }
         }
     }
@@ -467,31 +465,35 @@ struct CommandGridButton: View {
 }
 
 // MARK: - Output number sheet
+
 struct OutputNumberSheet: View {
+    let settings: AppSettings
     @Binding var text: String
     let onConfirm: (Int) -> Void
     let onCancel: () -> Void
+
+    private func s(_ k: String) -> String { settings.t(k) }
 
     var body: some View {
         NavigationStack {
             ZStack {
                 Color.appBackground.ignoresSafeArea()
                 Form {
-                    Section("Output number") {
-                        TextField("Number", text: $text)
+                    Section(s("output.title")) {
+                        TextField(s("output.placeholder"), text: $text)
                             .keyboardType(.numberPad)
                             .foregroundColor(.textPrimary)
                     }
                 }
             }
-            .navigationTitle("Output number")
+            .navigationTitle(s("output.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: onCancel).foregroundColor(.primaryRed)
+                    Button(s("btn.cancel"), action: onCancel).foregroundColor(.primaryRed)
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("OK") { onConfirm(Int(text) ?? 1) }.foregroundColor(.primaryRed)
+                    Button(s("btn.ok")) { onConfirm(Int(text) ?? 1) }.foregroundColor(.primaryRed)
                 }
             }
         }

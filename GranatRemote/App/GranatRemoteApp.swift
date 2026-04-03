@@ -2,28 +2,38 @@ import SwiftUI
 
 @main
 struct GranatRemoteApp: App {
-    @StateObject private var appState = AppState()
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    @StateObject private var appState    = AppState()
+    @StateObject private var appSettings = AppSettings()
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
-                .preferredColorScheme(.dark)
+                .environmentObject(appSettings)
+                .preferredColorScheme(appSettings.theme.colorScheme)
+                .onAppear {
+                    ScheduleNotificationManager.shared.requestPermission()
+                    // Re-queue background task on every launch (iOS clears queue on reinstall)
+                    BackgroundScheduleRunner.shared.scheduleNextIfNeeded()
+                }
         }
     }
 }
 
 struct RootView: View {
     @EnvironmentObject var appState: AppState
+    @EnvironmentObject var appSettings: AppSettings
     @State private var splashDone = false
-    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         if !splashDone {
             SplashView(onDone: { splashDone = true })
                 .onAppear {
+                    AppDelegate.appState = appState   // give AppDelegate a weak ref
                     appState.logout()
-                    // Auto-login via launch args: -login <l> -password <p>
+                    // Priority 1: launch args
                     let args = ProcessInfo.processInfo.arguments
                     if let li = args.firstIndex(of: "-login"), li + 1 < args.count,
                        let pi = args.firstIndex(of: "-password"), pi + 1 < args.count {
@@ -32,6 +42,9 @@ struct RootView: View {
                         let pcn = demoPCNs.first!
                         appState.setPCN(pcn)
                         appState.setSession(Session(host: pcn.host, port: pcn.port, login: login, password: pass))
+                    } else {
+                        // Priority 2: saved credentials
+                        _ = appState.loadSavedCredentials()
                     }
                 }
         } else {
@@ -39,22 +52,18 @@ struct RootView: View {
                 WelcomeView()
                     .navigationDestination(for: AppRoute.self) { route in
                         switch route {
-                        case .welcome:
-                            WelcomeView()
-                        case .countrySelect:
-                            CountrySelectView()
+                        case .welcome:       WelcomeView()
+                        case .countrySelect: CountrySelectView()
                         case .pcnSelect(let code):
                             let country = demoCountries.first { $0.code == code } ?? demoCountries[0]
                             PCNSelectView(country: country)
-                        case .login:
-                            LoginView()
-                        case .recoverPassword:
-                            RecoverPasswordView()
-                        case .shell:
-                            ShellView()
+                        case .login:         LoginView()
+                        case .recoverPassword: RecoverPasswordView()
+                        case .shell:         ShellView()
                         }
                     }
             }
+            .id(appSettings.language.rawValue)
         }
     }
 }
