@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 @MainActor
 class HomeViewModel: ObservableObject {
@@ -48,9 +49,33 @@ class HomeViewModel: ObservableObject {
                     groups[idx].state = newState
                 }
             }
+            sendCommandNotification(cmd: cmd, groupName: group.name)
         } catch {
             self.error = "Command error: \(error.localizedDescription)"
         }
+    }
+
+    private func sendCommandNotification(cmd: Int, groupName: String) {
+        let (title, icon): (String, String)
+        switch cmd {
+        case 52: (title, icon) = ("Armed",        "🔒")
+        case 53: (title, icon) = ("Disarmed",     "🔓")
+        case 55: (title, icon) = ("Arm stay",     "🏠")
+        case 54: (title, icon) = ("SOS Alarm",    "🚨")
+        default: return   // no notification for output commands
+        }
+
+        let content = UNMutableNotificationContent()
+        content.title = "\(icon) GRANAT — \(title)"
+        content.body  = groupName
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: "cmd_\(cmd)_\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: nil   // deliver immediately
+        )
+        UNUserNotificationCenter.current().add(request) { _ in }
     }
 
     func disconnect() { }

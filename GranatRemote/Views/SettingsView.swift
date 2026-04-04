@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 // MARK: - Settings root
 
@@ -173,6 +174,22 @@ struct SettingsView: View {
                         sectionHeader(s("settings.about"))
                         VStack(spacing: 0) {
                             settingsRow(label: s("settings.version"), value: appVersion())
+                            Divider().background(Color.inputBorder).padding(.leading, 16)
+                            Button {
+                                sendTestNotification()
+                            } label: {
+                                HStack {
+                                    Image(systemName: "bell.badge")
+                                        .font(.system(size: 15))
+                                        .foregroundColor(.primaryRed)
+                                    Text("Test notification")
+                                        .font(.system(size: 15))
+                                        .foregroundColor(.textPrimary)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                            }
                         }
                         .background(Color.cardBackground)
                         .cornerRadius(12)
@@ -244,6 +261,28 @@ struct SettingsView: View {
         let v = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let b = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(v) (\(b))"
+    }
+
+    private func sendTestNotification() {
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                guard settings.authorizationStatus == .authorized else {
+                    center.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+                    return
+                }
+                let content = UNMutableNotificationContent()
+                content.title = "🔔 GRANAT — Test"
+                content.body  = "Notifications are working"
+                content.sound = .default
+                let request = UNNotificationRequest(
+                    identifier: "test_\(Date().timeIntervalSince1970)",
+                    content: content,
+                    trigger: UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
+                )
+                center.add(request) { _ in }
+            }
+        }
     }
 }
 
