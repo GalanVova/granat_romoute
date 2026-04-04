@@ -64,51 +64,37 @@ class ScheduleNotificationManager {
 
     // MARK: Schedule all rules
 
-    func rescheduleAll(rules: [ScheduleRule], groups: [PanelGroup]) {
-        // Remove all pending schedule notifications
+    func rescheduleAll(rules: [ScheduleRule]) {
         center.getPendingNotificationRequests { [weak self] pending in
             guard let self else { return }
             let schedIds = pending.filter { $0.identifier.hasPrefix("sched_") }.map { $0.identifier }
             self.center.removePendingNotificationRequests(withIdentifiers: schedIds)
-
-            // Re-add all active rules
-            for rule in rules {
-                self.schedule(rule: rule, groups: groups)
-            }
+            for rule in rules { self.schedule(rule: rule) }
         }
     }
 
     // MARK: Schedule one rule (one notification per weekday)
 
-    private func schedule(rule: ScheduleRule, groups: [PanelGroup]) {
-        let targetGroups: [PanelGroup]
-        if let pid = rule.panelGroupId {
-            targetGroups = groups.filter { $0.id == pid }
-        } else {
-            targetGroups = groups
-        }
-
-        let title  = actionTitle(rule.action)
-        let body   = targetGroups.isEmpty
-            ? "All objects"
-            : targetGroups.map { $0.name }.joined(separator: ", ")
+    private func schedule(rule: ScheduleRule) {
+        let title      = actionTitle(rule.action)
+        let body       = rule.panelGroupId != nil ? "GRANAT" : "GRANAT — all objects"
         let categoryId = category(for: rule.action).rawValue
 
         for day in rule.days {
             let requestId = "sched_\(rule.id)_\(day.rawValue)"
 
-            var comps        = DateComponents()
-            comps.hour       = rule.hour
-            comps.minute     = rule.minute
-            comps.second     = 0
-            comps.weekday    = day.calendarValue   // 1=Sun … 7=Sat
+            var comps     = DateComponents()
+            comps.hour    = rule.hour
+            comps.minute  = rule.minute
+            comps.second  = 0
+            comps.weekday = day.calendarValue   // 1=Sun … 7=Sat
 
             let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: true)
 
             let content = UNMutableNotificationContent()
-            content.title           = title
-            content.body            = body
-            content.sound           = .default
+            content.title              = title
+            content.body               = body
+            content.sound              = .default
             content.categoryIdentifier = categoryId
             content.userInfo = [
                 NotifPayload.ruleId:       rule.id,

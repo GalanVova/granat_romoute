@@ -57,25 +57,26 @@ class ScheduleStore: ObservableObject {
     func add(_ rule: ScheduleRule) {
         rules.append(rule)
         save()
-        syncBackground()
+        sync()
     }
 
     func update(_ rule: ScheduleRule) {
         guard let i = rules.firstIndex(where: { $0.id == rule.id }) else { return }
         rules[i] = rule
         save()
-        syncBackground()
+        sync()
     }
 
     func delete(id: String) {
         rules.removeAll { $0.id == id }
         save()
-        syncBackground()
+        sync()
     }
 
-    /// Re-schedules the BGProcessingTask for the next upcoming rule.
-    private func syncBackground() {
+    /// Re-schedules BGProcessingTask and local UNCalendar notifications.
+    private func sync() {
         BackgroundScheduleRunner.shared.scheduleNextIfNeeded()
+        ScheduleNotificationManager.shared.rescheduleAll(rules: rules)
     }
 
     private func save() {

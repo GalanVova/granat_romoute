@@ -14,9 +14,16 @@ struct GranatRemoteApp: App {
                 .environmentObject(appSettings)
                 .preferredColorScheme(appSettings.theme.colorScheme)
                 .onAppear {
-                    ScheduleNotificationManager.shared.requestPermission()
-                    // Re-queue background task on every launch (iOS clears queue on reinstall)
-                    BackgroundScheduleRunner.shared.scheduleNextIfNeeded()
+                    ScheduleNotificationManager.shared.requestPermission { granted in
+                        guard granted else { return }
+                        // Re-queue background task and local notifications on every launch
+                        // (iOS clears both queues on reinstall)
+                        BackgroundScheduleRunner.shared.scheduleNextIfNeeded()
+                        let rules = ScheduleStore.shared.rules
+                        if !rules.isEmpty {
+                            ScheduleNotificationManager.shared.rescheduleAll(rules: rules)
+                        }
+                    }
                 }
         }
     }
