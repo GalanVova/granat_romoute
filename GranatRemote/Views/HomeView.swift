@@ -509,13 +509,40 @@ struct SingleGroupView: View {
 
 // MARK: - Per-object Events
 
+private enum EventPeriod: CaseIterable {
+    case day1, days7, month1, months3, year1
+
+    var hours: Int {
+        switch self {
+        case .day1:    return 24
+        case .days7:   return 168
+        case .month1:  return 720
+        case .months3: return 2160
+        case .year1:   return 8760
+        }
+    }
+
+    var fromDate: Date { Date().addingTimeInterval(-Double(hours) * 3600) }
+
+    func label(_ s: (String) -> String) -> String {
+        switch self {
+        case .day1:    return s("period.1d")
+        case .days7:   return s("period.7d")
+        case .month1:  return s("period.1m")
+        case .months3: return s("period.3m")
+        case .year1:   return s("period.1y")
+        }
+    }
+}
+
 struct ObjectEventsView: View {
     let group: PanelGroup
     let settings: AppSettings
     @EnvironmentObject var appState: AppState
     @ObservedObject private var cameraStore = CameraStore.shared
+    @State private var period: EventPeriod = .day1
     @State private var events: [PanelEvent] = []
-    @State private var isLoading = true
+    @State private var isLoading = false
     @State private var loadError: String?
     @State private var selectedCamera: Camera?
 
@@ -523,59 +550,81 @@ struct ObjectEventsView: View {
     private var cameras: [Camera] { cameraStore.cameras(for: group.id) }
 
     var body: some View {
-        ZStack {
-            Color.appBackground.ignoresSafeArea()
-            if isLoading {
-                ProgressView().tint(.textSecondary)
-            } else if let err = loadError {
-                Text(err)
-                    .font(.system(size: 14))
-                    .foregroundColor(.textSecondary)
-                    .padding()
-            } else if events.isEmpty {
-                Text(s("events.none"))
-                    .font(.system(size: 15))
-                    .foregroundColor(.textSecondary)
-            } else {
-                ScrollView {
-                    VStack(spacing: 0) {
-                        ForEach(events) { event in
-                            HStack(alignment: .top, spacing: 12) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(event.text)
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.textPrimary)
-                                    if !event.time.isEmpty {
-                                        Text(event.time)
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.textSecondary)
-                                    }
-                                }
-                                Spacer()
-                                if !cameras.isEmpty {
-                                    Button {
-                                        selectedCamera = cameras.first
-                                    } label: {
-                                        VStack(spacing: 2) {
-                                            Image(systemName: "video.fill")
-                                                .font(.system(size: 14))
-                                            Text(s("events.camera"))
-                                                .font(.system(size: 10))
+        VStack(spacing: 0) {
+            // Period filter chips
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(EventPeriod.allCases, id: \.hours) { p in
+                        let selected = period == p
+                        Button { period = p } label: {
+                            Text(p.label(s))
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(selected ? .white : .textPrimary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(selected ? Color.primaryRed : Color.cardBackground)
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+            }
+            .background(Color.appBackground)
+
+            Divider().background(Color.inputBorder)
+
+            ZStack {
+                Color.appBackground.ignoresSafeArea()
+                if isLoading {
+                    ProgressView().tint(.textSecondary)
+                } else if let err = loadError {
+                    Text(err)
+                        .font(.system(size: 14))
+                        .foregroundColor(.textSecondary)
+                        .padding()
+                } else if events.isEmpty {
+                    Text(s("events.none"))
+                        .font(.system(size: 15))
+                        .foregroundColor(.textSecondary)
+                } else {
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            ForEach(events) { event in
+                                HStack(alignment: .top, spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(event.text)
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.textPrimary)
+                                        if !event.time.isEmpty {
+                                            Text(event.time)
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.textSecondary)
                                         }
-                                        .foregroundColor(.primaryRed)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 6)
-                                        .background(Color.primaryRed.opacity(0.1))
-                                        .cornerRadius(8)
                                     }
-                                    .buttonStyle(.plain)
+                                    Spacer()
+                                    if !cameras.isEmpty {
+                                        Button { selectedCamera = cameras.first } label: {
+                                            VStack(spacing: 2) {
+                                                Image(systemName: "video.fill")
+                                                    .font(.system(size: 14))
+                                                Text(s("events.camera"))
+                                                    .font(.system(size: 10))
+                                            }
+                                            .foregroundColor(.primaryRed)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 6)
+                                            .background(Color.primaryRed.opacity(0.1))
+                                            .cornerRadius(8)
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
                                 }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                Divider().background(Color.inputBorder).padding(.leading, 16)
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            Divider()
-                                .background(Color.inputBorder)
-                                .padding(.leading, 16)
                         }
                     }
                 }
@@ -587,19 +636,18 @@ struct ObjectEventsView: View {
         )) {
             if let cam = selectedCamera { CameraPlayerView(camera: cam) }
         }
-        .task { await loadEvents() }
+        .task(id: period.hours) { await loadEvents() }
     }
 
     private func loadEvents() async {
         isLoading = true
         loadError = nil
         do {
-            let all = (try await appState.api?.getEvents()) ?? []
-            let filtered = all.filter { e in
-                (e.panelId.isEmpty || e.panelId == group.panelId) &&
-                (e.group == 0 || e.group == group.group)
-            }
-            events = filtered.isEmpty ? all : filtered
+            events = try await appState.api?.getEvents(
+                panel: group.panelId,
+                group: group.group,
+                fromDate: period.fromDate
+            ) ?? []
         } catch {
             loadError = error.localizedDescription
         }

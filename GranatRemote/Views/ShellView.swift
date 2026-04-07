@@ -50,28 +50,22 @@ struct ShellView: View {
                     .tag(0)
 
                     NavigationStack {
-                        NotificationsView()
-                    }
-                    .tabItem { Label(s("tab.events"),   systemImage: "bell.fill") }
-                    .tag(1)
-
-                    NavigationStack {
                         BalanceView()
                     }
                     .tabItem { Label(s("tab.balance"),  systemImage: "creditcard.fill") }
-                    .tag(2)
+                    .tag(1)
 
                     NavigationStack {
                         HelpView()
                     }
                     .tabItem { Label(s("tab.help"),     systemImage: "questionmark.circle.fill") }
-                    .tag(3)
+                    .tag(2)
 
                     NavigationStack {
                         SettingsView()
                     }
                     .tabItem { Label(s("tab.settings"), systemImage: "gearshape.fill") }
-                    .tag(4)
+                    .tag(3)
                 }
                 .tint(Color.primaryRed)
                 .id(ObjectIdentifier(api))
@@ -244,95 +238,3 @@ struct HelpView: View {
     }
 }
 
-// MARK: - Notifications / Events
-
-@MainActor
-class NotificationsViewModel: ObservableObject {
-    @Published var events: [PanelEvent] = []
-    @Published var isLoading = false
-    @Published var error: String?
-
-    func load(api: LunAPI?) async {
-        guard let api else { error = "Not connected"; return }
-        isLoading = true
-        error = nil
-        do {
-            events = try await api.getEvents()
-            isLoading = false
-        } catch {
-            self.error = error.localizedDescription
-            isLoading = false
-        }
-    }
-}
-
-struct NotificationsView: View {
-    @EnvironmentObject var appState: AppState
-    @EnvironmentObject var appSettings: AppSettings
-    @StateObject private var vm = NotificationsViewModel()
-    private func s(_ k: String) -> String { appSettings.t(k) }
-
-    var body: some View {
-        ZStack {
-            Color.appBackground.ignoresSafeArea()
-            if vm.isLoading {
-                ProgressView().tint(.textSecondary)
-            } else if let err = vm.error {
-                VStack(spacing: 12) {
-                    Text(s("err.error"))
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.textPrimary)
-                    Text(err)
-                        .font(.caption)
-                        .foregroundColor(.textSecondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                }
-            } else if vm.events.isEmpty {
-                Text(s("events.none"))
-                    .foregroundColor(.textSecondary)
-            } else {
-                ScrollView {
-                    VStack(spacing: 0) {
-                        HStack {
-                            Text(s("events.title"))
-                                .font(.system(size: 22, weight: .semibold))
-                                .foregroundColor(.textPrimary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
-                        .padding(.bottom, 12)
-
-                        ForEach(vm.events) { event in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(event.text)
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.textPrimary)
-                                HStack {
-                                    if !event.panelId.isEmpty {
-                                        Text("# \(event.panelId)/\(event.group)")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.textSecondary)
-                                    }
-                                    Spacer()
-                                    if !event.time.isEmpty {
-                                        Text(event.time)
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.textSecondary)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                            Divider()
-                                .background(Color.inputBorder)
-                                .padding(.leading, 20)
-                        }
-                    }
-                }
-            }
-        }
-        .task { await vm.load(api: appState.api) }
-    }
-}

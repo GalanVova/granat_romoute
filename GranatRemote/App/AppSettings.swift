@@ -124,6 +124,8 @@ enum L10n {
         // Events
         "events.title":  "Events",
         "events.none":   "No events",
+        "period.1d": "1 day", "period.7d": "7 days", "period.1m": "1 month",
+        "period.3m": "3 months", "period.1y": "1 year",
 
         // Help
         "help.title":  "Help",
@@ -233,6 +235,8 @@ enum L10n {
 
         "events.title": "Події",
         "events.none":  "Подій немає",
+        "period.1d": "1 день", "period.7d": "7 днів", "period.1m": "1 місяць",
+        "period.3m": "3 місяці", "period.1y": "1 рік",
 
         "help.title": "Довідка",
         "help.none":  "Інформація відсутня.",
@@ -328,6 +332,8 @@ enum L10n {
 
         "events.title": "События",
         "events.none":  "Событий нет",
+        "period.1d": "1 день", "period.7d": "7 дней", "period.1m": "1 месяц",
+        "period.3m": "3 месяца", "period.1y": "1 год",
 
         "help.title": "Справка",
         "help.none":  "Информация отсутствует.",
@@ -396,6 +402,7 @@ enum L10n {
         "obj.commands": "Comandos", "obj.events": "Eventos", "obj.schedule": "Horario",
         "events.camera": "Camera",
         "balance.title": "Balance", "events.title": "Eventos", "events.none": "Sin eventos",
+        "period.1d": "1 día", "period.7d": "7 días", "period.1m": "1 mes", "period.3m": "3 meses", "period.1y": "1 año",
         "help.title": "Ayuda", "help.none": "Sin información.",
         "settings.title": "Ajustes", "settings.account": "Cuenta", "settings.login": "Usuario",
         "settings.pcn": "Centro de seguridad", "settings.logout": "Cerrar sesión",
@@ -432,6 +439,7 @@ enum L10n {
         "obj.commands": "Commandes", "obj.events": "Événements", "obj.schedule": "Horaire",
         "events.camera": "Camera",
         "balance.title": "Solde", "events.title": "Événements", "events.none": "Aucun événement",
+        "period.1d": "1 jour", "period.7d": "7 jours", "period.1m": "1 mois", "period.3m": "3 mois", "period.1y": "1 an",
         "help.title": "Aide", "help.none": "Aucune information disponible.",
         "settings.title": "Paramètres", "settings.account": "Compte", "settings.login": "Identifiant",
         "settings.pcn": "Centre de sécurité", "settings.logout": "Déconnexion",
@@ -468,6 +476,7 @@ enum L10n {
         "obj.commands": "Komendy", "obj.events": "Zdarzenia", "obj.schedule": "Harmonogram",
         "events.camera": "Camera",
         "balance.title": "Saldo", "events.title": "Zdarzenia", "events.none": "Brak zdarzeń",
+        "period.1d": "1 dzień", "period.7d": "7 dni", "period.1m": "1 miesiąc", "period.3m": "3 miesiące", "period.1y": "1 rok",
         "help.title": "Pomoc", "help.none": "Brak informacji.",
         "settings.title": "Ustawienia", "settings.account": "Konto", "settings.login": "Login",
         "settings.pcn": "Centrum ochrony", "settings.logout": "Wyloguj",
@@ -504,6 +513,7 @@ enum L10n {
         "obj.commands": "Команди", "obj.events": "Събития", "obj.schedule": "Разписание",
         "events.camera": "Camera",
         "balance.title": "Баланс", "events.title": "Събития", "events.none": "Няма събития",
+        "period.1d": "1 ден", "period.7d": "7 дни", "period.1m": "1 месец", "period.3m": "3 месеца", "period.1y": "1 година",
         "help.title": "Помощ", "help.none": "Няма информация.",
         "settings.title": "Настройки", "settings.account": "Акаунт", "settings.login": "Логин",
         "settings.pcn": "Охранителен център", "settings.logout": "Изход",
@@ -540,6 +550,7 @@ enum L10n {
         "obj.commands": "Comenzi", "obj.events": "Evenimente", "obj.schedule": "Program",
         "events.camera": "Camera",
         "balance.title": "Sold", "events.title": "Evenimente", "events.none": "Fără evenimente",
+        "period.1d": "1 zi", "period.7d": "7 zile", "period.1m": "1 lună", "period.3m": "3 luni", "period.1y": "1 an",
         "help.title": "Ajutor", "help.none": "Fără informații.",
         "settings.title": "Setări", "settings.account": "Cont", "settings.login": "Utilizator",
         "settings.pcn": "Centru de pază", "settings.logout": "Deconectare",

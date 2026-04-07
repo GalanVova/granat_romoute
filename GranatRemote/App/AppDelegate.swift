@@ -43,9 +43,8 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         defer { completionHandler() }
         guard response.actionIdentifier == NotifAction.execute.rawValue else { return }
         let userInfo = response.notification.request.content.userInfo
-        Task { @MainActor in
-            guard let appState = AppDelegate.appState else { return }
-            await ScheduleExecutor.shared.execute(userInfo: userInfo, appState: appState)
+        Task {
+            await ScheduleExecutor.shared.execute(userInfo: userInfo)
         }
     }
 }

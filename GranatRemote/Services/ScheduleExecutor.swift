@@ -2,81 +2,68 @@ import Foundation
 import UserNotifications
 
 // MARK: - Executes a scheduled WAMP command after notification tap
+// Connects independently from saved credentials — works even if app was terminated.
 
-@MainActor
-class ScheduleExecutor: ObservableObject {
+actor ScheduleExecutor {
     static let shared = ScheduleExecutor()
 
-    @Published var lastResult: String?
-
-    /// Called from AppDelegate / scene when user taps "Execute" on a schedule notification.
-    func execute(userInfo: [AnyHashable: Any], appState: AppState) async {
+    func execute(userInfo: [AnyHashable: Any]) async {
         guard
             let actionRaw  = userInfo[NotifPayload.action] as? String,
-            let action     = ScheduleAction(rawValue: actionRaw)
+            let action     = ScheduleAction(rawValue: actionRaw),
+            let login      = UserDefaults.standard.string(forKey: "saved_login"),
+            let password   = UserDefaults.standard.string(forKey: "saved_password"),
+            let pcnId      = UserDefaults.standard.string(forKey: "saved_pcn_id"),
+            let pcn        = demoPCNs.first(where: { $0.id == pcnId }) ?? demoPCNs.first
         else { return }
 
         let panelGroupId = userInfo[NotifPayload.panelGroupId] as? String ?? ""
+        let uri = URL(string: "ws://\(pcn.host):\(pcn.port)/")!
+        let client = WampV1Client(uri: uri)
 
-        // Ensure we have an active API connection
-        let api: LunAPI
-        if let existing = appState.api {
-            api = existing
-        } else {
-            // Reconnect
-            guard let session = appState.session else { return }
-            let uri = URL(string: "ws://\(session.host):\(session.port)/")!
-            let client = WampV1Client(uri: uri)
-            do {
-                try await client.connect()
-                let a = LunAPI(client: client)
-                _ = try await a.signupRaw(login: session.login, password: session.password)
-                appState.api = a
-                api = a
-            } catch {
-                lastResult = "Connection failed: \(error.localizedDescription)"
-                return
-            }
-        }
+        do {
+            try await client.connect()
+            let api = LunAPI(client: client)
+            _ = try await api.signupRaw(login: login, password: password)
 
-        let cmd = wampCmd(for: action)
+            let cmd = wampCmd(for: action)
 
-        // Determine target groups
-        let targetGroups: [PanelGroup]
-        if panelGroupId.isEmpty {
-            // All panels — need to fetch if not loaded
-            if appState.session != nil {
-                do {
-                    let fetched = try await api.getPanelGroups()
-                    targetGroups = fetched
-                } catch {
-                    lastResult = "Failed to fetch groups: \(error.localizedDescription)"
-                    return
+            if panelGroupId.isEmpty {
+                let groups = try await api.getPanelGroups()
+                for g in groups {
+                    try await api.remoteControl(cmd: cmd, panel: g.panelId, group: g.group)
                 }
             } else {
-                return
+                let parts = panelGroupId.split(separator: "/", maxSplits: 1)
+                if parts.count == 2, let grp = Int(parts[1]) {
+                    try await api.remoteControl(cmd: cmd, panel: String(parts[0]), group: grp)
+                }
             }
-        } else {
-            // Split "panelId/group" composite id
-            let parts = panelGroupId.split(separator: "/", maxSplits: 1)
-            guard parts.count == 2,
-                  let grp = Int(parts[1]) else { return }
-            let pid = String(parts[0])
-            // Create a lightweight stub — remoteControl only needs panelId + group
-            let stub = PanelGroup(id: panelGroupId, panelId: pid, group: grp, name: "", address: nil, state: nil)
-            targetGroups = [stub]
-        }
 
-        var errors: [String] = []
-        for group in targetGroups {
-            do {
-                try await api.remoteControl(cmd: cmd, panel: group.panelId, group: group.group)
-            } catch {
-                errors.append("\(group.panelId): \(error.localizedDescription)")
-            }
+            await client.close()
+            await sendConfirmation(action: action)
+        } catch {
+            // silent — notification already informed the user
         }
+    }
 
-        lastResult = errors.isEmpty ? "Done" : errors.joined(separator: "\n")
+    private func sendConfirmation(action: ScheduleAction) async {
+        let (icon, label): (String, String)
+        switch action {
+        case .arm:     (icon, label) = ("🔒", "Armed")
+        case .disarm:  (icon, label) = ("🔓", "Disarmed")
+        case .armStay: (icon, label) = ("🏠", "Arm stay")
+        }
+        let content = UNMutableNotificationContent()
+        content.title = "\(icon) GRANAT — \(label)"
+        content.body  = "Schedule executed"
+        content.sound = .default
+        let request = UNNotificationRequest(
+            identifier: "sched_done_\(Date().timeIntervalSince1970)",
+            content: content,
+            trigger: nil
+        )
+        try? await UNUserNotificationCenter.current().add(request)
     }
 
     private func wampCmd(for action: ScheduleAction) -> Int {

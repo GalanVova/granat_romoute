@@ -141,8 +141,10 @@ class LunAPI {
         return raw
     }
 
-    func getEvents() async throws -> [PanelEvent] {
-        let res = try await client.call("GetEvents", args: [["fromAllGroup": 1]])
+    func getEvents(panel: String, group: Int, fromDate: Date, toDate: Date = Date(), count: Int = 200) async throws -> [PanelEvent] {
+        let fromTs = Int(fromDate.timeIntervalSince1970)
+        let toTs   = Int(toDate.timeIntervalSince1970)
+        let res = try await client.call("GetEvents", args: [panel, group, fromTs, toTs, count, 0])
         if let m = res as? [String: Any], let err = m["error"] as? String {
             throw WampError.callError(err)
         }
@@ -164,11 +166,11 @@ class LunAPI {
 
     private func extractList(_ res: Any?) -> [Any] {
         if let m = res as? [String: Any] {
-            for key in ["pnls", "groups", "events", "items", "list"] {
+            for key in ["evn", "pnls", "groups", "events", "items", "list"] {
                 if let list = m[key] as? [Any] { return list }
             }
             if let inner = m["result"] as? [String: Any] {
-                for key in ["pnls", "groups", "events", "items", "list"] {
+                for key in ["evn", "pnls", "groups", "events", "items", "list"] {
                     if let list = inner[key] as? [Any] { return list }
                 }
             }
