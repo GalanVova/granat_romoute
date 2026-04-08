@@ -33,7 +33,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         completionHandler([.banner, .sound])
     }
 
-    // MARK: - Handle notification action taps (kept for fallback)
+    // MARK: - Handle notification taps
 
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
@@ -41,8 +41,12 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
         defer { completionHandler() }
-        guard response.actionIdentifier == NotifAction.execute.rawValue else { return }
+        // Fire on banner tap (default) OR explicit "Execute" button
+        let isExecute = response.actionIdentifier == NotifAction.execute.rawValue
+            || response.actionIdentifier == UNNotificationDefaultActionIdentifier
+        guard isExecute else { return }   // "Skip" dismissal — do nothing
         let userInfo = response.notification.request.content.userInfo
+        guard userInfo[NotifPayload.action] != nil else { return }  // not a schedule notification
         Task {
             await ScheduleExecutor.shared.execute(userInfo: userInfo)
         }

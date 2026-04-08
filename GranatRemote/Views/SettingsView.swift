@@ -190,6 +190,22 @@ struct SettingsView: View {
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 12)
                             }
+                            Divider().background(Color.inputBorder).padding(.leading, 16)
+                            Button {
+                                scheduleTestExecution()
+                            } label: {
+                                HStack {
+                                    Image(systemName: "clock.badge.checkmark")
+                                        .font(.system(size: 15))
+                                        .foregroundColor(.orange)
+                                    Text("Test schedule (5s)")
+                                        .font(.system(size: 15))
+                                        .foregroundColor(.textPrimary)
+                                    Spacer()
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                            }
                         }
                         .background(Color.cardBackground)
                         .cornerRadius(12)
@@ -279,6 +295,34 @@ struct SettingsView: View {
                     identifier: "test_\(Date().timeIntervalSince1970)",
                     content: content,
                     trigger: UNTimeIntervalNotificationTrigger(timeInterval: 2, repeats: false)
+                )
+                center.add(request) { _ in }
+            }
+        }
+    }
+
+    /// Schedules a disarm command to fire in 5 seconds — fires on all objects.
+    private func scheduleTestExecution() {
+        let center = UNUserNotificationCenter.current()
+        center.getNotificationSettings { settings in
+            DispatchQueue.main.async {
+                guard settings.authorizationStatus == .authorized else {
+                    center.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
+                    return
+                }
+                let content = UNMutableNotificationContent()
+                content.title = "🔓 GRANAT — Disarm (test)"
+                content.body  = "Tap to execute"
+                content.sound = .default
+                content.categoryIdentifier = NotifCategory.scheduleDisarm.rawValue
+                content.userInfo = [
+                    NotifPayload.action:       ScheduleAction.disarm.rawValue,
+                    NotifPayload.panelGroupId: "",
+                ]
+                let request = UNNotificationRequest(
+                    identifier: "sched_test_\(Date().timeIntervalSince1970)",
+                    content: content,
+                    trigger: UNTimeIntervalNotificationTrigger(timeInterval: 5, repeats: false)
                 )
                 center.add(request) { _ in }
             }

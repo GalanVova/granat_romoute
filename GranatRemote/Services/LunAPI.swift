@@ -10,12 +10,24 @@ struct PanelEvent: Identifiable {
 
     static func from(json: Any) -> PanelEvent? {
         guard let m = json as? [String: Any] else { return nil }
-        let eid = "\(m["id"] ?? m["eid"] ?? UUID().uuidString)"
+        let eid = "\(m["id"] ?? m["eid"] ?? m["evtId"] ?? UUID().uuidString)"
         let panelId = "\(m["pid"] ?? m["panel"] ?? m["pnl"] ?? "")"
         let gr = Int("\(m["gr"] ?? 0)") ?? 0
-        let text = m["msg"] as? String ?? m["text"] as? String ?? m["nm"] as? String ?? m["dsc"] as? String ?? ""
-        let time = m["time"] as? String ?? m["dt"] as? String ?? m["date"] as? String ?? ""
-        guard !text.isEmpty else { return nil }
+        // text: try msg, text, nm, dsc — allow any type (convert to String)
+        let text: String
+        if let v = m["msg"] { text = "\(v)" }
+        else if let v = m["text"] { text = "\(v)" }
+        else if let v = m["nm"] { text = "\(v)" }
+        else if let v = m["dsc"] { text = "\(v)" }
+        else { text = "" }
+        // time: dt can be Int (unix ts) or String
+        let time: String
+        if let s = m["dt"] as? String { time = s }
+        else if let n = m["dt"] as? Int { time = String(n) }
+        else if let s = m["time"] as? String { time = s }
+        else if let s = m["date"] as? String { time = s }
+        else { time = "" }
+        guard !text.isEmpty && text != "nil" else { return nil }
         return PanelEvent(id: eid, panelId: panelId, group: gr, text: text, time: time)
     }
 }
@@ -144,12 +156,17 @@ class LunAPI {
     func getEvents(panel: String, group: Int, fromDate: Date, toDate: Date = Date(), count: Int = 200) async throws -> [PanelEvent] {
         let fromTs = Int(fromDate.timeIntervalSince1970)
         let toTs   = Int(toDate.timeIntervalSince1970)
+        NSLog("[GetEvents] panel=%@ group=%d from=%d to=%d", panel, group, fromTs, toTs)
         let res = try await client.call("GetEvents", args: [panel, group, fromTs, toTs, count, 0])
+        NSLog("[GetEvents] raw type=%@ value=%@", String(describing: type(of: res)), String(String(describing: res).prefix(800)))
         if let m = res as? [String: Any], let err = m["error"] as? String {
             throw WampError.callError(err)
         }
         let list = extractList(res)
-        return list.compactMap { PanelEvent.from(json: $0) }
+        NSLog("[GetEvents] list count=%d first=%@", list.count, String(String(describing: list.first ?? "nil").prefix(300)))
+        let events = list.compactMap { PanelEvent.from(json: $0) }
+        NSLog("[GetEvents] parsed events count=%d", events.count)
+        return events
     }
 
     // MARK: - Helpers
@@ -164,22 +181,30 @@ class LunAPI {
         return [:]
     }
 
+    private static let listKeys = ["evn", "pnls", "groups", "events", "items", "list", "data", "rows"]
+
     private func extractList(_ res: Any?) -> [Any] {
+        if let list = res as? [Any] { return list }
         if let m = res as? [String: Any] {
-            for key in ["evn", "pnls", "groups", "events", "items", "list"] {
+            for key in Self.listKeys {
                 if let list = m[key] as? [Any] { return list }
             }
             if let inner = m["result"] as? [String: Any] {
-                for key in ["evn", "pnls", "groups", "events", "items", "list"] {
+                for key in Self.listKeys {
                     if let list = inner[key] as? [Any] { return list }
                 }
+            }
+            // Server may wrap the whole response in "result": {…}
+            for key in Self.listKeys {
+                if let list = (m["result"] as? [Any]) { return list }
+                _ = key  // satisfy compiler
             }
         }
         if let s = res as? String,
            let data = s.data(using: .utf8),
-           let m = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-           let list = m["pnls"] as? [Any] { return list }
-        if let list = res as? [Any] { return list }
+           let parsed = try? JSONSerialization.jsonObject(with: data) {
+            return extractList(parsed)
+        }
         return []
     }
 }

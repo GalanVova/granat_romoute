@@ -8,33 +8,48 @@ actor ScheduleExecutor {
     static let shared = ScheduleExecutor()
 
     func execute(userInfo: [AnyHashable: Any]) async {
+        NSLog("[ScheduleExecutor] execute called, userInfo=%@", "\(userInfo)")
         guard
             let actionRaw  = userInfo[NotifPayload.action] as? String,
             let action     = ScheduleAction(rawValue: actionRaw),
             let login      = UserDefaults.standard.string(forKey: "saved_login"),
             let password   = UserDefaults.standard.string(forKey: "saved_password"),
-            let pcnId      = UserDefaults.standard.string(forKey: "saved_pcn_id"),
-            let pcn        = demoPCNs.first(where: { $0.id == pcnId }) ?? demoPCNs.first
-        else { return }
+            let pcnId      = UserDefaults.standard.string(forKey: "saved_pcn_id")
+        else {
+            NSLog("[ScheduleExecutor] guard failed: action=%@ login=%@ pcnId=%@",
+                  userInfo[NotifPayload.action] as? String ?? "nil",
+                  UserDefaults.standard.string(forKey: "saved_login") ?? "nil",
+                  UserDefaults.standard.string(forKey: "saved_pcn_id") ?? "nil")
+            return
+        }
+        guard let pcn = demoPCNs.first(where: { $0.id == pcnId }) ?? demoPCNs.first
+        else {
+            NSLog("[ScheduleExecutor] no PCN found for id=%@", pcnId)
+            return
+        }
 
         let panelGroupId = userInfo[NotifPayload.panelGroupId] as? String ?? ""
         let uri = URL(string: "ws://\(pcn.host):\(pcn.port)/")!
         let client = WampV1Client(uri: uri)
 
+        NSLog("[ScheduleExecutor] connecting to %@:%d as %@ action=%@", pcn.host, pcn.port, login, "\(action)")
         do {
             try await client.connect()
             let api = LunAPI(client: client)
             _ = try await api.signupRaw(login: login, password: password)
+            NSLog("[ScheduleExecutor] signed in, sending command")
 
             let cmd = wampCmd(for: action)
 
             if panelGroupId.isEmpty {
                 let groups = try await api.getPanelGroups()
+                NSLog("[ScheduleExecutor] got %d groups, sending to all", groups.count)
                 for g in groups {
                     try await api.remoteControl(cmd: cmd, panel: g.panelId, group: g.group)
                 }
             } else {
                 let parts = panelGroupId.split(separator: "/", maxSplits: 1)
+                NSLog("[ScheduleExecutor] panelGroupId=%@ parts=%@", panelGroupId, "\(parts)")
                 if parts.count == 2, let grp = Int(parts[1]) {
                     try await api.remoteControl(cmd: cmd, panel: String(parts[0]), group: grp)
                 }
@@ -42,8 +57,9 @@ actor ScheduleExecutor {
 
             await client.close()
             await sendConfirmation(action: action)
+            NSLog("[ScheduleExecutor] done, confirmation sent")
         } catch {
-            // silent — notification already informed the user
+            NSLog("[ScheduleExecutor] error: %@", error.localizedDescription)
         }
     }
 
