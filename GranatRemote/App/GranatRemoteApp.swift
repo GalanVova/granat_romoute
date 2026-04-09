@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 @main
 struct GranatRemoteApp: App {
@@ -14,10 +15,9 @@ struct GranatRemoteApp: App {
                 .environmentObject(appSettings)
                 .preferredColorScheme(appSettings.theme.colorScheme)
                 .onAppear {
-                    ScheduleNotificationManager.shared.requestPermission { granted in
-                        guard granted else { return }
-                        // Re-queue background task and local notifications on every launch
-                        // (iOS clears both queues on reinstall)
+                    // Don't prompt for permission on cold launch — only re-queue if already granted
+                    UNUserNotificationCenter.current().getNotificationSettings { settings in
+                        guard settings.authorizationStatus == .authorized else { return }
                         BackgroundScheduleRunner.shared.scheduleNextIfNeeded()
                         let rules = ScheduleStore.shared.rules
                         if !rules.isEmpty {
